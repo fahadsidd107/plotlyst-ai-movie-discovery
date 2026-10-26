@@ -24,6 +24,10 @@ Its long-term direction includes real movie and television metadata, rich search
 - Optional LangChainGo/OpenAI review classification
 - Offline sentiment fallback when no AI credentials are configured
 - CORS configuration through environment variables
+- Startup-time environment validation with actionable failures
+- Structured, machine-readable API errors
+- Separate liveness and database-readiness health checks
+- Graceful HTTP shutdown and MongoDB disconnect handling
 - Idempotent local seed-data bootstrap
 - Single-command local development for the database, API, and frontend
 - Responsive React UI with loading and error states
@@ -83,6 +87,8 @@ As the domain grows, business rules will move behind handler → service → rep
 | Method | Endpoint | Access | Purpose |
 |---|---|---|---|
 | `GET` | `/hello` | Public | API health smoke test |
+| `GET` | `/health/live` | Public | Confirm the API process is alive |
+| `GET` | `/health/ready` | Public | Confirm MongoDB-backed readiness |
 | `GET` | `/movies` | Public | List catalogue movies |
 | `GET` | `/genres` | Public | List registration/discovery genres |
 | `POST` | `/register` | Public | Create a user with a hashed password |
@@ -127,9 +133,17 @@ This account is for local development only. Production deployments must provisio
 
 Backend file: `Server/PlotlystServer/.env`
 
+Copy the safe templates before adding local values:
+
+```bash
+cp Server/PlotlystServer/.env.example Server/PlotlystServer/.env
+cp Client/plotlyst-client/.env.example Client/plotlyst-client/.env
+```
+
 ```dotenv
 MONGODB_URI=mongodb://127.0.0.1:27017
 DATABASE_NAME=plotlyst
+PORT=8080
 ALLOWED_ORIGINS=http://localhost:5173
 SECRET_KEY=<random-64-character-secret>
 SECRET_REFRESH_KEY=<different-random-64-character-secret>
@@ -197,6 +211,8 @@ npm --prefix Client/plotlyst-client run build
 cd Server/PlotlystServer
 go test ./...
 ```
+
+The current response conventions and structured error envelope are documented in [`docs/API_CONTRACTS.md`](docs/API_CONTRACTS.md).
 
 ## Status
 

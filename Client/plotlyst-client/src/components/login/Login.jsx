@@ -48,14 +48,15 @@ const Login = () => {
         }
     }; 
     return (
-        <Container className="login-container d-flex align-items-center justify-content-center min-vh-100">
-            <div className="login-card shadow p-4 rounded bg-white" style={{maxWidth: 400, width: '100%'}}>
-                <div className="text-center mb-4">
-                    <img src={logo} alt="Logo" width={60} className="mb-2" />
-                    <h2 className="fw-bold">Sign In</h2>
-                    <p className="text-muted">Welcome back! Please login to your account.</p>
+        <Container className="auth-page">
+            <div className="auth-card">
+                <div className="auth-card__intro">
+                    <img src={logo} alt="Plotlyst" width={56} />
+                    <p className="eyebrow">Welcome back</p>
+                    <h1>Sign in to your list.</h1>
+                    <p>Continue to recommendations shaped around your favourite genres.</p>
                 </div>
-                {error && <div className="alert alert-danger py-2">{error}</div>}
+                {error && <div className="form-error" role="alert">{error}</div>}
                 <Form onSubmit={handleSubmit}>
                     <Form.Group controlId="formBasicEmail" className="mb-3">
                         <Form.Label>Email address</Form.Label>
@@ -83,7 +84,7 @@ const Login = () => {
                     <Button
                         variant="primary"
                         type="submit"
-                        className="w-100 mb-2"
+                        className="button button--primary w-100"
                         disabled={loading}
                         style={{fontWeight: 600, letterSpacing: 1}}
                     >
@@ -95,9 +96,9 @@ const Login = () => {
                         ) : 'Login'}
                     </Button>
                 </Form>
-                <div className="text-center mt-3">
-                    <span className="text-muted">Don't have an account? </span>
-                    <Link to="/register" className="fw-semibold">Register here</Link>
+                <div className="auth-card__switch">
+                    <span>New to Plotlyst? </span>
+                    <Link to="/register">Create an account</Link>
                 </div>
             </div>
         </Container>

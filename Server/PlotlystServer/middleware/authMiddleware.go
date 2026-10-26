@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"plotlyst/server/apiresponse"
 	"plotlyst/server/utils"
 )
 
@@ -12,20 +13,17 @@ func AuthMiddleWare() gin.HandlerFunc {
 		token, err := utils.GetAccessToken(c)
 
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-			c.Abort()
+			apiresponse.Error(c, http.StatusUnauthorized, "authentication_required", "Authentication is required")
 			return
 		}
 		if token == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "No token provided"})
-			c.Abort()
+			apiresponse.Error(c, http.StatusUnauthorized, "authentication_required", "Authentication is required")
 			return
 		}
 		claims, err := utils.ValidateToken(token)
 
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-			c.Abort()
+			apiresponse.Error(c, http.StatusUnauthorized, "invalid_token", "The access token is invalid or expired")
 			return
 		}
 		c.Set("userId", claims.UserId)

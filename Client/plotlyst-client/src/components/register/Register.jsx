@@ -56,7 +56,7 @@ const Register = () => {
             }
             // Registration successful, redirect to login
             navigate('/login', { replace: true });
-        } catch (err) {
+        } catch {
             setError('Registration failed. Please try again.');
         } finally {
             setLoading(false);
@@ -81,15 +81,16 @@ const Register = () => {
     return (
 
 
-       <Container className="login-container d-flex align-items-center justify-content-center min-vh-100">
-        <div className="login-card shadow p-4 rounded bg-white" style={{maxWidth: 400, width: '100%'}}>
-                <div className="text-center mb-4">
-                     <img src={logo} alt="Logo" width={60} className="mb-2" />
-                    <h2 className="fw-bold">Register</h2>
-                    <p className="text-muted">Create your Plotlyst account.</p>
-                    {error && <div className="alert alert-danger py-2">{error}</div>}                
+       <Container className="auth-page">
+        <div className="auth-card auth-card--wide">
+                <div className="auth-card__intro">
+                     <img src={logo} alt="Plotlyst" width={56} />
+                    <p className="eyebrow">Start your Plotlyst</p>
+                    <h1>Build a better watchlist.</h1>
+                    <p>Tell us what you love and we’ll shape your recommendations.</p>
+                    {error && <div className="form-error" role="alert">{error}</div>}
                 </div>
-             <Form onSubmit={handleSubmit}>
+             <Form onSubmit={handleSubmit} className="register-grid">
                      <Form.Group className="mb-3">
                         <Form.Label>First Name</Form.Label>
                         <Form.Control
@@ -145,7 +146,8 @@ const Register = () => {
                             Passwords do not match.
                         </Form.Control.Feedback>
                     </Form.Group>
-                    <Form.Group>
+                    <Form.Group className="register-grid__full mb-3" controlId="favouriteGenres">
+                        <Form.Label>Favourite genres</Form.Label>
                         <Form.Select
                             multiple
                             value={favouriteGenres.map(g => String(g.genre_id))}
@@ -157,14 +159,14 @@ const Register = () => {
                                 </option>
                             ))}
                         </Form.Select>
-                        <Form.Text className="text-muted">
+                        <Form.Text>
                             Hold Ctrl (Windows) or Cmd (Mac) to select multiple genres.
                         </Form.Text>
                     </Form.Group>
                      <Button
                         variant="primary"
                         type="submit"
-                        className="w-100 mb-2"
+                        className="button button--primary w-100 register-grid__full"
                         disabled={loading}
                         style={{fontWeight: 600, letterSpacing: 1}}
                     >
@@ -176,6 +178,7 @@ const Register = () => {
                         ) : 'Register'}
                     </Button>                        
             </Form>
+            <div className="auth-card__switch">Already have an account? <Link to="/login">Sign in</Link></div>
             </div>           
        </Container>
 

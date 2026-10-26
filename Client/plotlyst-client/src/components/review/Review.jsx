@@ -5,7 +5,8 @@ import {useParams} from 'react-router-dom'
 import useAxiosPrivate from '../../hooks/useAxiosPrivate';
 import useAuth from '../../hooks/useAuth';
 import Movie from '../movie/Movie'
-import Spinner from '../spinner/Spinner';
+import { MovieGridSkeleton } from '../ui/States';
+import PageIntro from '../ui/PageIntro';
 
 const Review = () => {
 
@@ -13,7 +14,7 @@ const Review = () => {
     const [loading, setLoading] = useState(false);
     const revText = useRef();
     const { imdb_id } = useParams();
-    const {auth,setAuth} = useAuth();
+    const {auth} = useAuth();
     const axiosPrivate = useAxiosPrivate();
 
     useEffect(() => {
@@ -32,7 +33,7 @@ const Review = () => {
 
         fetchMovie();
 
-    }, []);
+    }, [axiosPrivate, imdb_id]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -43,11 +44,11 @@ const Review = () => {
             const response = await axiosPrivate.patch(`/updatereview/${imdb_id}`, { admin_review: revText.current.value });
             console.log(response.data);           
 
-            setMovie(() => ({
-                ...movie,
-                admin_review: response.data?.admin_review ?? movie.admin_review,
+            setMovie(currentMovie => ({
+                ...currentMovie,
+                admin_review: response.data?.admin_review ?? currentMovie.admin_review,
                 ranking: {
-                    ranking_name: response.data?.ranking_name ?? movie.ranking?.ranking_name
+                    ranking_name: response.data?.ranking_name ?? currentMovie.ranking?.ranking_name
                 }
             }));
 
@@ -69,18 +70,15 @@ const Review = () => {
     return (
       <>
         {loading ? (
-            <Spinner />
+            <div className="page-shell"><MovieGridSkeleton count={1} /></div>
         ) : (
-            <div className="container py-5">
-                <h2 className="text-center mb-4">Admin Review</h2>
-                <div className="row justify-content-center">
-                    <div className="col-12 col-md-6 d-flex align-items-center justify-content-center mb-4 mb-md-0">
-                        <div className="w-100 shadow rounded p-3 bg-white d-flex justify-content-center align-items-center">
+            <div className="page-shell review-page">
+                <PageIntro eyebrow="Editorial desk" title="Review the selection.">Add a concise editorial note; Plotlyst will update the title’s ranking after submission.</PageIntro>
+                <div className="review-layout">
+                    <div className="review-movie">
                             <Movie movie={movie} />
-                        </div>
                     </div>
-                    <div className="col-12 col-md-6 d-flex align-items-stretch">
-                        <div className="w-100 shadow rounded p-4 bg-light">
+                    <div className="review-editor">
                             {auth && auth.role === "ADMIN" ? (
                                 <Form onSubmit={handleSubmit}>
                                     <Form.Group className="mb-3" controlId="adminReviewTextarea">
@@ -96,14 +94,13 @@ const Review = () => {
                                         />
                                     </Form.Group>
                                     <div className="d-flex justify-content-end">
-                                        <Button variant="info" type="submit">
+                                        <Button className="button button--primary" type="submit">
                                             Submit Review
                                         </Button>
                                     </div>
                                 </Form> ):(
-                                <div className="alert alert-info">{movie.admin_review}</div>
+                                <div className="review-readonly">{movie.admin_review || 'No editorial review has been added yet.'}</div>
                             )}                           
-                        </div>
                     </div>
                 </div>
             </div>

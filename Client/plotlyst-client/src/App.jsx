@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import './App.css'
 import Home from './components/home/Home';
 import Recommended from './components/recommended/Recommended';
@@ -39,19 +38,27 @@ function App() {
     };
 
   return (
-    <>
+    <div className="app-shell">
       <Header handleLogout = {handleLogout}/>
-      <Routes path="/" element = {<Layout/>}>
-        <Route path="/" element={<Home updateMovieReview={updateMovieReview}/>}></Route>
-        <Route path="/register" element={<Register/>}></Route>
-        <Route path="/login" element={<Login/>}></Route>
-        <Route element = {<RequiredAuth/>}>
-            <Route path="/recommended" element={<Recommended/>}></Route>
-            <Route path="/review/:imdb_id" element={<Review/>}></Route>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/" element={<Home updateMovieReview={updateMovieReview}/>}></Route>
+          <Route path="/register" element={<Register/>}></Route>
+          <Route path="/login" element={<Login/>}></Route>
+          <Route element = {<RequiredAuth/>}>
+              <Route path="/recommended" element={<Recommended/>}></Route>
+              <Route path="/review/:imdb_id" element={<Review/>}></Route>
+          </Route>
         </Route>
       </Routes>
-
-    </>
+      <footer className="site-footer">
+        <div className="site-footer__inner">
+          <strong>Plotlyst</strong>
+          <span>Thoughtful movie discovery, shaped around your taste.</span>
+          <span>© {new Date().getFullYear()} Plotlyst</span>
+        </div>
+      </footer>
+    </div>
   )
 }
 

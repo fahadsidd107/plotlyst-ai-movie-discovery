@@ -1,4 +1,3 @@
-import {useState} from 'react'
 import Button from 'react-bootstrap/Button'
 import Container from 'react-bootstrap/Container'
 import Nav from 'react-bootstrap/Nav'
@@ -13,53 +12,52 @@ const Header = ({handleLogout}) => {
 
 
     return (
-        <Navbar bg="dark" variant='dark' expand="lg" stick="top" className="shadow-sm">
-            <Container>
-                <Navbar.Brand>
+        <>
+        <a className="skip-link" href="#main-content">Skip to content</a>
+        <Navbar variant='dark' expand="md" sticky="top" className="site-header">
+            <Container className="site-header__inner">
+                <Navbar.Brand as={Link} to="/" className="brand-lockup">
                      <img
                         alt=""
                         src={logo}
-                        width="30"
-                        height="30"
-                        className="d-inline-block align-top me-2"
+                        width="38"
+                        height="38"
+                        className="brand-logo"
                     />
                     Plotlyst
                 </Navbar.Brand>
 
-            <Navbar.Toggle aria-controls="main-navbar-nav" />
-                <Navbar.Collapse>
-                    <Nav className ="me-auto">
+            <Navbar.Toggle aria-controls="main-navbar-nav" aria-label="Open navigation" />
+                <Navbar.Collapse id="main-navbar-nav">
+                    <Nav className ="main-nav me-auto">
                         <Nav.Link as = {NavLink} to="/">
                             Home
                         </Nav.Link>
                         <Nav.Link as = {NavLink} to="/recommended">
-                            Recommended
+                            For You
                         </Nav.Link>
                     </Nav>
     
-                    <Nav className ="ms-auto align-items-center">
+                    <Nav className ="account-nav ms-auto align-items-md-center">
                         {auth ? (
                         <>
-                            <span className="me-3 text-light">
+                            <span className="user-greeting">
                                 Hello, <strong>{auth.first_name}</strong>
                             </span>
-                            <Button variant="outline-light" size="sm" onClick={handleLogout}>
+                            <Button className="button button--secondary" onClick={handleLogout}>
                                 Logout
                             </Button>
                         </>
                         ):(
                             <>
                                 <Button
-                                    variant="outline-info"
-                                    size="sm"
-                                    className="me-2"
+                                    className="button button--secondary"
                                     onClick={() => navigate("/login")} 
                                 >
                                     Login
                                 </Button>
                                 <Button
-                                    variant="info"
-                                    size="sm"
+                                    className="button button--primary"
                                     onClick={() => navigate("/register")}  
                                 >
                                     Register
@@ -70,6 +68,7 @@ const Header = ({handleLogout}) => {
                 </Navbar.Collapse>
             </Container>
         </Navbar>
+        </>
     )
 }
 export default Header;

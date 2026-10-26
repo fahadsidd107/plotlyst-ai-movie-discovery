@@ -12,11 +12,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/joho/godotenv"
 	"github.com/tmc/langchaingo/llms/openai"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
+	"plotlyst/server/apiresponse"
 	"plotlyst/server/database"
 	"plotlyst/server/models"
 	"plotlyst/server/utils"
@@ -34,14 +34,15 @@ func GetMovies(client *mongo.Client) gin.HandlerFunc {
 		cursor, err := movieCollection.Find(ctx, bson.D{})
 
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch movies."})
+			apiresponse.Error(c, http.StatusInternalServerError, "database_error", "Unable to fetch movies")
+			return
 		}
 		defer cursor.Close(ctx)
 
 		var movies []models.Movie
 
 		if err = cursor.All(ctx, &movies); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode movies."})
+			apiresponse.Error(c, http.StatusInternalServerError, "database_error", "Unable to decode movies")
 			return
 		}
 
@@ -58,7 +59,7 @@ func GetMovie(client *mongo.Client) gin.HandlerFunc {
 		movieID := c.Param("imdb_id")
 
 		if movieID == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Movie ID is required"})
+			apiresponse.Error(c, http.StatusBadRequest, "movie_id_required", "A movie ID is required")
 			return
 		}
 
@@ -68,8 +69,12 @@ func GetMovie(client *mongo.Client) gin.HandlerFunc {
 
 		err := movieCollection.FindOne(ctx, bson.D{{Key: "imdb_id", Value: movieID}}).Decode(&movie)
 
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			apiresponse.Error(c, http.StatusNotFound, "movie_not_found", "The requested movie was not found")
+			return
+		}
 		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Movie not found"})
+			apiresponse.Error(c, http.StatusInternalServerError, "database_error", "Unable to fetch the movie")
 			return
 		}
 
@@ -85,12 +90,12 @@ func AddMovie(client *mongo.Client) gin.HandlerFunc {
 
 		var movie models.Movie
 		if err := c.ShouldBindJSON(&movie); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+			apiresponse.Error(c, http.StatusBadRequest, "invalid_request", "The movie payload is invalid")
 			return
 		}
 
 		if err := validate.Struct(movie); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Validation failed", "details": err.Error()})
+			apiresponse.Error(c, http.StatusBadRequest, "validation_failed", "The movie payload failed validation", err.Error())
 			return
 		}
 		var movieCollection *mongo.Collection = database.OpenCollection("movies", client)
@@ -98,7 +103,7 @@ func AddMovie(client *mongo.Client) gin.HandlerFunc {
 		result, err := movieCollection.InsertOne(ctx, movie)
 
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add movie"})
+			apiresponse.Error(c, http.StatusInternalServerError, "database_error", "Unable to add the movie")
 			return
 		}
 
@@ -112,18 +117,18 @@ func AdminReviewUpdate(client *mongo.Client) gin.HandlerFunc {
 
 		role, err := utils.GetRoleFromContext(c)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Role not found in context"})
+			apiresponse.Error(c, http.StatusUnauthorized, "authentication_required", "Authentication context is missing")
 			return
 		}
 
 		if role != "ADMIN" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "User must be part of the ADMIN role"})
+			apiresponse.Error(c, http.StatusForbidden, "admin_required", "Administrator access is required")
 			return
 		}
 
 		movieId := c.Param("imdb_id")
 		if movieId == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Movie Id required"})
+			apiresponse.Error(c, http.StatusBadRequest, "movie_id_required", "A movie ID is required")
 			return
 		}
 		var req struct {
@@ -135,12 +140,17 @@ func AdminReviewUpdate(client *mongo.Client) gin.HandlerFunc {
 		}
 
 		if err := c.ShouldBind(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+			apiresponse.Error(c, http.StatusBadRequest, "invalid_request", "The review payload is invalid")
+			return
+		}
+		req.AdminReview = strings.TrimSpace(req.AdminReview)
+		if req.AdminReview == "" {
+			apiresponse.Error(c, http.StatusBadRequest, "review_required", "The review cannot be empty")
 			return
 		}
 		sentiment, rankVal, err := GetReviewRanking(req.AdminReview, client, c)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error getting review ranking"})
+			apiresponse.Error(c, http.StatusInternalServerError, "ranking_error", "Unable to classify the review")
 			return
 		}
 
@@ -163,12 +173,12 @@ func AdminReviewUpdate(client *mongo.Client) gin.HandlerFunc {
 		result, err := movieCollection.UpdateOne(ctx, filter, update)
 
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error updating movie"})
+			apiresponse.Error(c, http.StatusInternalServerError, "database_error", "Unable to update the movie")
 			return
 		}
 
 		if result.MatchedCount == 0 {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Movie not found"})
+			apiresponse.Error(c, http.StatusNotFound, "movie_not_found", "The requested movie was not found")
 			return
 		}
 		resp.RankingName = sentiment
@@ -195,12 +205,6 @@ func GetReviewRanking(admin_review string, client *mongo.Client, c *gin.Context)
 	}
 
 	sentimentDelimited = strings.Trim(sentimentDelimited, ",")
-
-	err = godotenv.Load(".env")
-
-	if err != nil {
-		log.Println("Warning: .env file not found")
-	}
 
 	OpenAiApiKey := os.Getenv("OPENAI_API_KEY")
 
@@ -317,18 +321,15 @@ func GetRecommendedMovies(client *mongo.Client) gin.HandlerFunc {
 		userId, err := utils.GetUserIdFromContext(c)
 
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "User Id not found in context"})
+			apiresponse.Error(c, http.StatusUnauthorized, "authentication_required", "Authentication context is missing")
+			return
 		}
 
 		favourite_genres, err := GetUsersFavouriteGenres(userId, client, c)
 
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			apiresponse.Error(c, http.StatusInternalServerError, "recommendation_error", "Unable to load recommendation preferences")
 			return
-		}
-		err = godotenv.Load(".env")
-		if err != nil {
-			log.Println("Warning: .env file not found")
 		}
 		var recommendedMovieLimitVal int64 = 5
 
@@ -358,7 +359,7 @@ func GetRecommendedMovies(client *mongo.Client) gin.HandlerFunc {
 		cursor, err := movieCollection.Find(ctx, filter, findOptions)
 
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching recommended movies"})
+			apiresponse.Error(c, http.StatusInternalServerError, "database_error", "Unable to fetch recommended movies")
 			return
 		}
 		defer cursor.Close(ctx)
@@ -366,7 +367,7 @@ func GetRecommendedMovies(client *mongo.Client) gin.HandlerFunc {
 		var recommendedMovies []models.Movie
 
 		if err := cursor.All(ctx, &recommendedMovies); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			apiresponse.Error(c, http.StatusInternalServerError, "database_error", "Unable to decode recommended movies")
 			return
 		}
 		c.JSON(http.StatusOK, recommendedMovies)
@@ -395,6 +396,7 @@ func GetUsersFavouriteGenres(userId string, client *mongo.Client, c *gin.Context
 		if err == mongo.ErrNoDocuments {
 			return []string{}, nil
 		}
+		return nil, err
 	}
 
 	favGenresArray, ok := result["favourite_genres"].(bson.A)
@@ -430,14 +432,14 @@ func GetGenres(client *mongo.Client) gin.HandlerFunc {
 
 		cursor, err := genreCollection.Find(ctx, bson.D{})
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching movie genres"})
+			apiresponse.Error(c, http.StatusInternalServerError, "database_error", "Unable to fetch genres")
 			return
 		}
 		defer cursor.Close(ctx)
 
 		var genres []models.Genre
 		if err := cursor.All(ctx, &genres); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			apiresponse.Error(c, http.StatusInternalServerError, "database_error", "Unable to decode genres")
 			return
 		}
 		c.JSON(http.StatusOK, genres)

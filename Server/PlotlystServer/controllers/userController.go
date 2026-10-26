@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -11,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"golang.org/x/crypto/bcrypt"
+	"plotlyst/server/apiresponse"
 	"plotlyst/server/database"
 	"plotlyst/server/models"
 	"plotlyst/server/utils"
@@ -31,20 +31,20 @@ func RegisterUser(client *mongo.Client) gin.HandlerFunc {
 		var user models.User
 
 		if err := c.ShouldBindJSON(&user); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input data"})
+			apiresponse.Error(c, http.StatusBadRequest, "invalid_request", "The registration payload is invalid")
 			return
 		}
 		validate := validator.New()
 
 		if err := validate.Struct(user); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Validation failed", "details": err.Error()})
+			apiresponse.Error(c, http.StatusBadRequest, "validation_failed", "The registration payload failed validation", err.Error())
 			return
 		}
 
 		hashedPassword, err := HashPassword(user.Password)
 
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to hash password"})
+			apiresponse.Error(c, http.StatusInternalServerError, "internal_error", "Unable to create the account")
 			return
 		}
 
@@ -56,11 +56,11 @@ func RegisterUser(client *mongo.Client) gin.HandlerFunc {
 		count, err := userCollection.CountDocuments(ctx, bson.D{{Key: "email", Value: user.Email}})
 
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check existing user"})
+			apiresponse.Error(c, http.StatusInternalServerError, "database_error", "Unable to check the account")
 			return
 		}
 		if count > 0 {
-			c.JSON(http.StatusConflict, gin.H{"error": "User already exists"})
+			apiresponse.Error(c, http.StatusConflict, "email_already_registered", "An account with this email already exists")
 			return
 		}
 		user.UserID = bson.NewObjectID().Hex()
@@ -71,7 +71,7 @@ func RegisterUser(client *mongo.Client) gin.HandlerFunc {
 		result, err := userCollection.InsertOne(ctx, user)
 
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+			apiresponse.Error(c, http.StatusInternalServerError, "database_error", "Unable to create the account")
 			return
 		}
 
@@ -86,7 +86,7 @@ func LoginUser(client *mongo.Client) gin.HandlerFunc {
 		var userLogin models.UserLogin
 
 		if err := c.ShouldBindJSON(&userLogin); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalide input data"})
+			apiresponse.Error(c, http.StatusBadRequest, "invalid_request", "The login payload is invalid")
 			return
 		}
 
@@ -98,27 +98,27 @@ func LoginUser(client *mongo.Client) gin.HandlerFunc {
 		var foundUser models.User
 		err := userCollection.FindOne(ctx, bson.D{{Key: "email", Value: userLogin.Email}}).Decode(&foundUser)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+			apiresponse.Error(c, http.StatusUnauthorized, "invalid_credentials", "Invalid email or password")
 			return
 		}
 
 		err = bcrypt.CompareHashAndPassword([]byte(foundUser.Password), []byte(userLogin.Password))
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+			apiresponse.Error(c, http.StatusUnauthorized, "invalid_credentials", "Invalid email or password")
 			return
 		}
 
 		token, refreshToken, err := utils.GenerateAllTokens(foundUser.Email, foundUser.FirstName, foundUser.LastName, foundUser.Role, foundUser.UserID)
 
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate tokens"})
+			apiresponse.Error(c, http.StatusInternalServerError, "internal_error", "Unable to start the session")
 			return
 		}
 
 		err = utils.UpdateAllTokens(foundUser.UserID, token, refreshToken, client)
 
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update tokens"})
+			apiresponse.Error(c, http.StatusInternalServerError, "database_error", "Unable to persist the session")
 			return
 		}
 		http.SetCookie(c.Writer, &http.Cookie{
@@ -166,17 +166,15 @@ func LogoutHandler(client *mongo.Client) gin.HandlerFunc {
 
 		err := c.ShouldBindJSON(&UserLogout)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+			apiresponse.Error(c, http.StatusBadRequest, "invalid_request", "The logout payload is invalid")
 			return
 		}
-
-		fmt.Println("User ID from Logout request:", UserLogout.UserId)
 
 		err = utils.UpdateAllTokens(UserLogout.UserId, "", "", client) // Clear tokens in the database
 		// Optionally, you can also remove the user session from the database if needed
 
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error logging out"})
+			apiresponse.Error(c, http.StatusInternalServerError, "database_error", "Unable to end the session")
 			return
 		}
 		// c.SetCookie(
@@ -231,15 +229,13 @@ func RefreshTokenHandler(client *mongo.Client) gin.HandlerFunc {
 		refreshToken, err := c.Cookie("refresh_token")
 
 		if err != nil {
-			fmt.Println("error", err.Error())
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unable to retrieve refresh token from cookie"})
+			apiresponse.Error(c, http.StatusUnauthorized, "refresh_token_required", "A refresh token is required")
 			return
 		}
 
 		claim, err := utils.ValidateRefreshToken(refreshToken)
 		if err != nil || claim == nil {
-			fmt.Println("error", err.Error())
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired refresh token"})
+			apiresponse.Error(c, http.StatusUnauthorized, "invalid_refresh_token", "The refresh token is invalid or expired")
 			return
 		}
 
@@ -249,14 +245,14 @@ func RefreshTokenHandler(client *mongo.Client) gin.HandlerFunc {
 		err = userCollection.FindOne(ctx, bson.D{{Key: "user_id", Value: claim.UserId}}).Decode(&user)
 
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+			apiresponse.Error(c, http.StatusUnauthorized, "session_user_not_found", "The session user no longer exists")
 			return
 		}
 
 		newToken, newRefreshToken, _ := utils.GenerateAllTokens(user.Email, user.FirstName, user.LastName, user.Role, user.UserID)
 		err = utils.UpdateAllTokens(user.UserID, newToken, newRefreshToken, client)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error updating tokens"})
+			apiresponse.Error(c, http.StatusInternalServerError, "database_error", "Unable to refresh the session")
 			return
 		}
 

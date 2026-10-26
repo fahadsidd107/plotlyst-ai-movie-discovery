@@ -8,9 +8,9 @@ This plan translates the master product brief into manageable vertical slices. A
 ✅ Remove the previous playback integration and identifiers.  
 ✅ Establish a one-command local environment and seed workflow.  
 ✅ Repair local JWT/cookie behavior and support AI-free review updates.  
-⬜ Audit API contracts, introduce structured errors, add health checks and graceful shutdown.  
-⬜ Create Midnight Pop design tokens, typography, reusable cards, skeletons and empty states.  
-⬜ Add environment validation and `.env.example` files without secrets.
+✅ Audit API contracts, introduce structured errors, add health checks and graceful shutdown.  
+✅ Create Midnight Pop design tokens, typography, reusable cards, skeletons and empty states.  
+✅ Add environment validation and `.env.example` files without secrets.
 
 **Outcome:** a stable, branded base that is safe to extend.
 

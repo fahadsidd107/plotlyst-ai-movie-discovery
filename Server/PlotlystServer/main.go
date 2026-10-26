@@ -2,78 +2,89 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"log"
+	"net/http"
 	"os"
-	"strings"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
-	"go.mongodb.org/mongo-driver/v2/mongo"
+	"plotlyst/server/apiresponse"
+	"plotlyst/server/config"
+	"plotlyst/server/controllers"
 	"plotlyst/server/database"
 	"plotlyst/server/routes"
 )
 
 func main() {
-	// This is the main function
-
-	router := gin.Default()
-
-	router.GET("/hello", func(c *gin.Context) {
-		c.String(200, "Hello, Plotlyst!")
-	})
-
-	err := godotenv.Load(".env")
+	cfg, err := config.Load()
 	if err != nil {
-		log.Println("Warning: unable to find .env file")
+		log.Fatalf("configuration error: %v", err)
 	}
 
-	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
-
-	var origins []string
-	if allowedOrigins != "" {
-		origins = strings.Split(allowedOrigins, ",")
-		for i := range origins {
-			origins[i] = strings.TrimSpace(origins[i])
-			log.Println("Allowed Origin:", origins[i])
-		}
-	} else {
-		origins = []string{"http://localhost:5173"}
-		log.Println("Allowed Origin: http://localhost:5173")
+	connectCtx, cancelConnect := context.WithTimeout(context.Background(), 10*time.Second)
+	client, err := database.Connect(connectCtx, cfg.MongoDBURI)
+	cancelConnect()
+	if err != nil {
+		log.Fatalf("database connection failed: %v", err)
 	}
 
-	config := cors.Config{}
-	config.AllowOrigins = origins
-	config.AllowMethods = []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"}
-	//config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
-	config.AllowHeaders = []string{"Origin", "Content-Type", "Authorization"}
-	config.ExposeHeaders = []string{"Content-Length"}
-	config.AllowCredentials = true
-	config.MaxAge = 12 * time.Hour
+	router := gin.New()
+	router.Use(gin.Logger(), gin.Recovery())
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     cfg.AllowedOrigins,
+		AllowMethods:     []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
-	router.Use(cors.New(config))
-	router.Use(gin.Logger())
-
-	var client *mongo.Client = database.Connect()
-
-	if err := client.Ping(context.Background(), nil); err != nil {
-		log.Fatalf("Failed to reach server: %v", err)
-	}
-	defer func() {
-		err := client.Disconnect(context.Background())
-		if err != nil {
-			log.Fatalf("Failed to disconnect from MongoDB: %v", err)
-		}
-
-	}()
-
+	router.GET("/hello", func(c *gin.Context) { c.String(http.StatusOK, "Hello, Plotlyst!") })
+	router.GET("/health/live", controllers.Liveness)
+	router.GET("/health/ready", controllers.Readiness(client))
+	router.NoRoute(func(c *gin.Context) {
+		apiresponse.Error(c, http.StatusNotFound, "route_not_found", "The requested API route does not exist")
+	})
 	routes.SetupUnProtectedRoutes(router, client)
 	routes.SetupProtectedRoutes(router, client)
 
-	if err := router.Run(":8080"); err != nil {
-		fmt.Println("Failed to start server", err)
+	server := &http.Server{
+		Addr:              ":" + cfg.Port,
+		Handler:           router,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       15 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       60 * time.Second,
 	}
 
+	serverErrors := make(chan error, 1)
+	go func() {
+		log.Printf("Plotlyst API listening on http://localhost:%s", cfg.Port)
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			serverErrors <- err
+		}
+	}()
+
+	shutdownSignals := make(chan os.Signal, 1)
+	signal.Notify(shutdownSignals, os.Interrupt, syscall.SIGTERM)
+	select {
+	case sig := <-shutdownSignals:
+		log.Printf("shutdown signal received: %s", sig)
+	case err := <-serverErrors:
+		log.Printf("HTTP server failed: %v", err)
+	}
+
+	shutdownCtx, cancelShutdown := context.WithTimeout(context.Background(), cfg.ShutdownTimeout)
+	defer cancelShutdown()
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		log.Printf("HTTP shutdown incomplete: %v", err)
+	}
+	if err := client.Disconnect(shutdownCtx); err != nil {
+		log.Printf("database disconnect failed: %v", err)
+	}
+	log.Println("Plotlyst API stopped")
 }

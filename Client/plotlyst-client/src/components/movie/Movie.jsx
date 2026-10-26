@@ -2,41 +2,30 @@ import Button from 'react-bootstrap/Button'
 import "./Movie.css";
 const Movie = ({movie,updateMovieReview}) => {
     return (
-        <div className="col-md-4 mb-4" key={movie._id}>
-            <div className="card h-100 shadow-sm movie-card">
-                <div style={{position:"relative"}}>
+        <article className="movie-card" key={movie._id}>
+                <div className="movie-card__poster-wrap">
                     <img src={movie.poster_path} alt={movie.title} 
-                        className="card-img-top"
-                        style={{
-                            objectFit: "contain",
-                            height: "250px",
-                            width: "100%"
-                        }}
+                        className="movie-card__poster" loading="lazy"
                     />
+                    {movie.ranking?.ranking_name && <span className="ranking-badge">{movie.ranking.ranking_name}</span>}
                 </div>
-                <div className = "card-body d-flex flex-column">
-                    <h5 className ="card-title">{movie.title}</h5>
-                    <p className="card-text mb-2">{movie.imdb_id}</p>
+                <div className="movie-card__body">
+                    <p className="movie-card__id">IMDb · {movie.imdb_id}</p>
+                    <h2 className="movie-card__title">{movie.title}</h2>
+                    {movie.admin_review && <p className="movie-card__review">“{movie.admin_review}”</p>}
                 </div>
-                {movie.ranking?.ranking_name && (
-                    <span className="badge bg-dark m-3 p-2" style={{fontSize:"1rem"}}>
-                        {movie.ranking.ranking_name}
-                    </span>
-                )}
                   {updateMovieReview && (
                         <Button
-                            variant="outline-info"
+                            className="button button--card"
                             onClick={e => {
                                 e.preventDefault();
                                 updateMovieReview(movie.imdb_id);
                             }}
-                            className="m-3"
                         >
-                            Review
+                            Write review <span aria-hidden="true">→</span>
                         </Button>
                     )}
-            </div>
-        </div>
+        </article>
     )
 }
 export default Movie;
