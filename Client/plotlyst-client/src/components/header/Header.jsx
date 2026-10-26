@@ -4,7 +4,7 @@ import Nav from 'react-bootstrap/Nav'
 import Navbar from 'react-bootstrap/Navbar'
 import {useNavigate, NavLink, Link} from 'react-router-dom'
 import useAuth from '../../hooks/useAuth';
-import logo from '../../assets/PlotlystLogo.png';
+import logo from '../../assets/PlotlystIcon.png';
 
 const Header = ({handleLogout}) => {
     const navigate = useNavigate();

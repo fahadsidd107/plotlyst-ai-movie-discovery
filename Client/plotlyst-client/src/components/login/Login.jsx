@@ -5,7 +5,7 @@ import Form from 'react-bootstrap/Form';
 import axiosClient from '../../api/axiosConfig';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
-import logo from '../../assets/PlotlystLogo.png';
+import logo from '../../assets/PlotlystIcon.png';
 
 const Login = () => {
     

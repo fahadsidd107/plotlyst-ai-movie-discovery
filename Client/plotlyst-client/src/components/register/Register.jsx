@@ -4,7 +4,7 @@ import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import axiosClient from '../../api/axiosConfig';
 import { useNavigate, Link } from 'react-router-dom';
-import logo from '../../assets/PlotlystLogo.png';
+import logo from '../../assets/PlotlystIcon.png';
 
 const Register = () => {
     const [firstName, setFirstName] = useState('');

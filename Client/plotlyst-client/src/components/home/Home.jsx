@@ -33,9 +33,9 @@ const Home =({updateMovieReview}) => {
 
     return (
         <div className="page-shell">
-            <PageIntro eyebrow="Your next story starts here" title="Find a film worth talking about." constellation
+            <PageIntro eyebrow="Cinema, tuned to your frequency" title="Your next personality trait is probably a movie." constellation
                 meta={!loading && !message ? `${movies.length} ${movies.length === 1 ? 'title' : 'titles'} in the current catalogue` : undefined}>
-                Browse a focused catalogue, see its editorial ranking, and discover what fits your next movie night.
+                Escape the endless scroll. Plotlyst turns a small, sharp catalogue into your next “you have to watch this” moment—ranked, reviewed, and ready to match your mood.
             </PageIntro>
             <section className="content-section" aria-label="Movie catalogue">
                 {loading ? <MovieGridSkeleton /> : message && movies.length === 0 && message.startsWith('The')
@@ -49,5 +49,4 @@ const Home =({updateMovieReview}) => {
 };
 
 export default Home;
-
 

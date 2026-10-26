@@ -38,9 +38,9 @@ const Recommended = () => {
 
     return (
         <div className="page-shell">
-            <PageIntro eyebrow="Curated for you" title="Your personal screening room."
-              meta={genres ? `Inspired by your taste in ${genres}` : 'Based on your saved favourite genres'}>
-              A tighter selection drawn from the genres you care about most.
+            <PageIntro eyebrow="The algorithm knows your vibe" title="Your taste has entered the chat." constellation
+              meta={genres ? `Currently vibing with ${genres}` : 'Powered by the genres you chose—not random hype'}>
+              No generic “popular right now” pile. This is your private after-hours shelf: fewer choices, stronger energy, and films selected around the stories you actually enjoy.
             </PageIntro>
             <section className="content-section" aria-label="Recommended movies">
               {loading ? <MovieGridSkeleton count={4} /> : error ? <ErrorState message={error} onRetry={() => setReloadKey(key => key + 1)} /> : <Movies movies={movies} message={message} />}
