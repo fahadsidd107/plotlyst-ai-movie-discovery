@@ -1,12 +1,12 @@
 # Node Dependencies
-client/magic-stream-client/node_modules/
-client/magic-stream-client/dist/
+Client/plotlyst-client/node_modules/
+Client/plotlyst-client/dist/
 node_modules/
 dist/
 
 # Go build artifacts
-Server/MagicStreamServer/app
-Server/MagicStreamServer/bin/
+Server/PlotlystServer/app
+Server/PlotlystServer/bin/
 *.exe
 *.dll
 *.out
@@ -16,9 +16,8 @@ Server/MagicStreamServer/bin/
 .vscode/
 
 # Environment files
-Client/magic-stream-client/.env
-Server/MagicStreamServer/.env
+Client/plotlyst-client/.env
+Server/PlotlystServer/.env
 .env
 *.env
-
 
