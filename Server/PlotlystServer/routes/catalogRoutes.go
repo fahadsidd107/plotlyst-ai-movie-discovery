@@ -16,4 +16,5 @@ func SetupCatalogRoutes(router *gin.Engine, catalog *controllers.CatalogControll
 	api.GET("/people/trending", catalog.TrendingPeople)
 	api.GET("/people/born-today", catalog.BornToday)
 	api.GET("/people/:id", catalog.Person)
+	api.GET("/search", catalog.Search)
 }

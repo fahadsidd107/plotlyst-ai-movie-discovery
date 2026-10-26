@@ -14,3 +14,4 @@ export const getEpisode = (id, season, episode) => axiosClient.get(`/api/catalog
 export const getPeople = (page = 1) => axiosClient.get('/api/catalog/people/trending', { params: { page } });
 export const getBornToday = () => axiosClient.get('/api/catalog/people/born-today', { params: { timezone: 'Europe/Berlin' } });
 export const getPerson = (id) => axiosClient.get(`/api/catalog/people/${id}`);
+export const searchMulti = (query) => axiosClient.get('/api/catalog/search', { params: { query } });

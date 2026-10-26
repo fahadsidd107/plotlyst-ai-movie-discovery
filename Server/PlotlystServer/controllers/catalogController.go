@@ -111,6 +111,20 @@ func (h *CatalogController) Person(c *gin.Context) {
 	h.respond(c, out)
 }
 
+func (h *CatalogController) Search(c *gin.Context) {
+	var out tmdb.Page[interface{}]
+	query := c.Query("query")
+	if query == "" {
+		apiresponse.Error(c, http.StatusBadRequest, "query_required", "Search query is required")
+		return
+	}
+	q := url.Values{"query": {query}}
+	if !h.fetch(c, "/search/multi", q, &out) {
+		return
+	}
+	h.respond(c, out)
+}
+
 func (h *CatalogController) BornToday(c *gin.Context) {
 	location := time.UTC
 	if tz := c.Query("timezone"); tz != "" {
