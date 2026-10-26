@@ -10,16 +10,18 @@ const AmbientStage = () => {
     const pointer = { x: -1000, y: -1000 };
     const ripples = [];
     let frameId;
+    let scrollTimer;
+    let paused = false;
     let particles = [];
 
     const resize = () => {
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      const ratio = Math.min(window.devicePixelRatio || 1, 1.25);
       canvas.width = window.innerWidth * ratio;
       canvas.height = window.innerHeight * ratio;
       canvas.style.width = `${window.innerWidth}px`;
       canvas.style.height = `${window.innerHeight}px`;
       context.setTransform(ratio, 0, 0, ratio, 0, 0);
-      particles = Array.from({ length: Math.min(56, Math.floor(window.innerWidth / 24)) }, () => ({
+      particles = Array.from({ length: Math.min(30, Math.floor(window.innerWidth / 42)) }, () => ({
         x: Math.random() * window.innerWidth,
         y: Math.random() * window.innerHeight,
         vx: (Math.random() - 0.5) * 0.18,
@@ -38,7 +40,7 @@ const AmbientStage = () => {
 
     const draw = () => {
       context.clearRect(0, 0, window.innerWidth, window.innerHeight);
-      particles.forEach((particle, index) => {
+      particles.forEach((particle) => {
         if (!reducedMotion) {
           particle.x += particle.vx;
           particle.y += particle.vy;
@@ -58,18 +60,6 @@ const AmbientStage = () => {
         context.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
         context.fill();
 
-        for (let otherIndex = index + 1; otherIndex < particles.length; otherIndex += 1) {
-          const other = particles[otherIndex];
-          const gap = Math.hypot(particle.x - other.x, particle.y - other.y);
-          if (gap < 95) {
-            context.globalAlpha = (1 - gap / 95) * 0.08;
-            context.strokeStyle = particle.color;
-            context.beginPath();
-            context.moveTo(particle.x, particle.y);
-            context.lineTo(other.x, other.y);
-            context.stroke();
-          }
-        }
       });
 
       for (let index = ripples.length - 1; index >= 0; index -= 1) {
@@ -85,7 +75,24 @@ const AmbientStage = () => {
         if (ripple.alpha <= 0) ripples.splice(index, 1);
       }
       context.globalAlpha = 1;
+      if (!paused && !document.hidden) frameId = requestAnimationFrame(draw);
+    };
+
+    const resume = () => {
+      if (!paused || document.hidden) return;
+      paused = false;
       frameId = requestAnimationFrame(draw);
+    };
+    const onScroll = () => {
+      paused = true;
+      cancelAnimationFrame(frameId);
+      window.clearTimeout(scrollTimer);
+      scrollTimer = window.setTimeout(resume, 140);
+    };
+    const onVisibility = () => {
+      paused = document.hidden;
+      cancelAnimationFrame(frameId);
+      if (!paused) frameId = requestAnimationFrame(draw);
     };
 
     resize();
@@ -94,12 +101,17 @@ const AmbientStage = () => {
     window.addEventListener('pointermove', onPointerMove);
     document.addEventListener('pointerleave', onPointerLeave);
     window.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    document.addEventListener('visibilitychange', onVisibility);
     return () => {
       cancelAnimationFrame(frameId);
       window.removeEventListener('resize', resize);
       window.removeEventListener('pointermove', onPointerMove);
       document.removeEventListener('pointerleave', onPointerLeave);
       window.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('scroll', onScroll);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.clearTimeout(scrollTimer);
     };
   }, []);
 

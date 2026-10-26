@@ -2,6 +2,7 @@
   "name": "plotlyst",
   "private": true,
   "scripts": {
-    "dev": "bash scripts/dev.sh"
+    "dev": "bash scripts/dev.sh",
+    "migrate:ratings": "cd Server/PlotlystServer && go run ./cmd/migrate-ratings"
   }
 }

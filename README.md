@@ -150,6 +150,12 @@ SECRET_REFRESH_KEY=<different-random-64-character-secret>
 RECOMMENDED_MOVIE_LIMIT=5
 OPENAI_API_KEY=
 BASE_PROMPT_TEMPLATE="Classify the review using one ranking from: {rankings}."
+TMDB_API_KEY=<your-v3-api-key>
+TMDB_BASE_URL=https://api.themoviedb.org/3
+TMDB_IMAGE_BASE_URL=https://image.tmdb.org/t/p
+TMDB_TIMEOUT=8s
+TMDB_CACHE_TTL=10m
+TMDB_MAX_RETRIES=3
 ```
 
 Frontend file: `Client/plotlyst-client/.env`
@@ -198,7 +204,7 @@ High-level sequence:
 
 ## Responsible external integrations
 
-The planned catalogue adapter will keep provider credentials on the Go server, add HTTP timeouts and caching, and persist only data permitted by applicable terms. Any future AI workflow must verify that its input data may legally be sent to an AI provider. Unavailable or unlicensed datasets will produce explicit unavailable states—not invented content.
+The TMDB catalogue adapter keeps provider credentials on the Go server and uses timeouts, bounded retries, rate-limit handling and a short in-memory cache. TMDB content is not sent to AI providers. See [`docs/TMDB_DATA_POLICY.md`](docs/TMDB_DATA_POLICY.md) for attribution, provider and licence details.
 
 ## Build and validation
 
@@ -214,9 +220,11 @@ go test ./...
 
 The current response conventions and structured error envelope are documented in [`docs/API_CONTRACTS.md`](docs/API_CONTRACTS.md).
 
+Run the idempotent legacy editorial-rating compatibility migration with `npm run migrate:ratings`.
+
 ## Status
 
-Plotlyst is under active development. The authenticated MongoDB-backed foundation works today; the broader discovery platform described in the roadmap is planned and will be delivered incrementally.
+Plotlyst is under active development. The authenticated MongoDB-backed foundation and TMDB movie, television and people catalogue work today; later roadmap phases will be delivered incrementally.
 
 ---
 

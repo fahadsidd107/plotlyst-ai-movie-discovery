@@ -11,6 +11,7 @@ func setValidEnvironment(t *testing.T) {
 	t.Setenv("ALLOWED_ORIGINS", "http://localhost:5173")
 	t.Setenv("RECOMMENDED_MOVIE_LIMIT", "5")
 	t.Setenv("OPENAI_API_KEY", "")
+	t.Setenv("TMDB_API_KEY", "test-key")
 }
 
 func TestLoadAcceptsValidEnvironment(t *testing.T) {

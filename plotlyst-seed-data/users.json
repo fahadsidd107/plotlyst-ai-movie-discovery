@@ -1,9 +1,9 @@
 [
     {
         "user_id": "68385b9981097c6b4042dab4",
-        "first_name": "Bob",
-        "last_name": "Jones",
-        "email": "fahd@gmail.com",
+        "first_name": "Fahad",
+        "last_name": "Siddiqui",
+        "email": "fahad@gmail.com",
         "password": "$2a$10$FAd/ArLwxQ3WbNE3XKbyveRHidTpW9g84hX2CPr0tWdGGerrP6.3K",
         "role": "ADMIN",
         "created_at": {

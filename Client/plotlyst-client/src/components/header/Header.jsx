@@ -33,6 +33,9 @@ const Header = ({handleLogout}) => {
                         <Nav.Link as = {NavLink} to="/">
                             Home
                         </Nav.Link>
+                        <Nav.Link as={NavLink} to="/movies">Movies</Nav.Link>
+                        <Nav.Link as={NavLink} to="/tv">TV</Nav.Link>
+                        <Nav.Link as={NavLink} to="/people">People</Nav.Link>
                         <Nav.Link as = {NavLink} to="/recommended">
                             For You
                         </Nav.Link>

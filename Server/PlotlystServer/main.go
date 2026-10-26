@@ -17,6 +17,7 @@ import (
 	"plotlyst/server/controllers"
 	"plotlyst/server/database"
 	"plotlyst/server/routes"
+	"plotlyst/server/tmdb"
 )
 
 func main() {
@@ -50,6 +51,8 @@ func main() {
 		apiresponse.Error(c, http.StatusNotFound, "route_not_found", "The requested API route does not exist")
 	})
 	routes.SetupUnProtectedRoutes(router, client)
+	tmdbClient := tmdb.New(cfg.TMDBBaseURL, cfg.TMDBAPIKey, cfg.TMDBTimeout, cfg.TMDBCacheTTL, cfg.TMDBMaxRetries)
+	routes.SetupCatalogRoutes(router, controllers.NewCatalogController(tmdbClient, cfg.TMDBImageBaseURL))
 	routes.SetupProtectedRoutes(router, client)
 
 	server := &http.Server{
