@@ -38,7 +38,7 @@ const Recommended = () => {
 
     return (
         <div className="page-shell">
-            <PageIntro eyebrow="The algorithm knows your vibe" title="Your taste has entered the chat." constellation
+            <PageIntro eyebrow="The algorithm knows your vibe" title="Your taste has entered the chat."
               meta={genres ? `Currently vibing with ${genres}` : 'Powered by the genres you chose—not random hype'}>
               No generic “popular right now” pile. This is your private after-hours shelf: fewer choices, stronger energy, and films selected around the stories you actually enjoy.
             </PageIntro>

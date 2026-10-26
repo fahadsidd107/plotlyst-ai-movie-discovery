@@ -30,15 +30,17 @@ This plan translates the master product brief into manageable vertical slices. A
 
 ## Step 3 — Discovery, search and charts
 
-⬜ Replace the simple grid with an aggregated, progressively loaded cinematic homepage.  
-⬜ Build global autocomplete for movies, shows and people.  
-⬜ Build backend-driven filters for genre, year, country, language, runtime and provider.  
-⬜ Implement reproducible Top 100, Top 250 and paginated Top 2,000 charts.  
-⬜ Add television charts, fan favourites, trending, year/decade and genre destinations.  
-⬜ Separate official franchises, editorial collections and user-created lists.  
-⬜ Document ranking formulas, thresholds, source provenance and stable tie-breaking.
+✅ Replace the simple grid with an aggregated, progressively loaded cinematic homepage.
+✅ Build global autocomplete for movies, shows and people.
+✅ Build backend-driven filters for genre, year, country, language, runtime and provider.
+✅ Implement reproducible Top 100, Top 250 and paginated Top 2,000 charts.
+✅ Add television charts, fan favourites, trending, year/decade and genre destinations.
+✅ Separate official franchises, editorial collections and user-created lists.
+✅ Document ranking formulas, thresholds, source provenance and stable tie-breaking.
 
 **Outcome:** a deep discovery product rather than a static catalogue.
+
+**Reproducibility boundary:** chart ordering is deterministic for the same cached TMDB payload. Because provider votes change, immutable historical/nightly chart snapshots remain a production-hardening task rather than being falsely claimed by the live chart API.
 
 ## Step 4 — Community and personal library
 

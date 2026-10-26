@@ -14,4 +14,11 @@ export const getEpisode = (id, season, episode) => axiosClient.get(`/api/catalog
 export const getPeople = (page = 1) => axiosClient.get('/api/catalog/people/trending', { params: { page } });
 export const getBornToday = () => axiosClient.get('/api/catalog/people/born-today', { params: { timezone: 'Europe/Berlin' } });
 export const getPerson = (id) => axiosClient.get(`/api/catalog/people/${id}`);
-export const searchMulti = (query) => axiosClient.get('/api/catalog/search', { params: { query } });
+export const searchMulti = (query, page = 1, signal) => axiosClient.get('/api/discovery/search', { params: { q: query, page }, signal });
+export const getDiscoveryHome = (signal) => axiosClient.get('/api/discovery/home', { signal });
+export const getHomeSection = (section, signal) => axiosClient.get(`/api/discovery/home/${section}`, { signal });
+export const discover = (media, params, signal) => axiosClient.get(`/api/discovery/${media}`, { params, signal });
+export const getDiscoveryFilters = (media, signal) => axiosClient.get(`/api/discovery/filters/${media}`, { signal });
+export const getChart = (media, size, page = 1, signal) => axiosClient.get(`/api/discovery/charts/${media}/${size}`, { params: { page }, signal });
+export const getFranchise = (id, signal) => axiosClient.get(`/api/discovery/franchises/${id}`, { signal });
+export const getCollectionKinds = (signal) => axiosClient.get('/api/discovery/collection-kinds', { signal });

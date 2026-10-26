@@ -82,3 +82,16 @@ Success responses use a provider-aware envelope:
 ```
 
 List results use distinct movie, television and person summary DTOs. Detail responses use dedicated movie, series, season, episode and person DTOs. TMDB failures are mapped to stable `tmdb_unavailable`, `tmdb_rate_limited`, `tmdb_upstream_error`, or `catalog_item_not_found` errors without leaking the upstream response or API key.
+
+## Discovery contracts
+
+- `GET /api/discovery/home` returns independently named homepage sections and preserves section-level errors.
+- `GET /api/discovery/home/:section` supports progressive loading for `now-playing`, `trending-movies`, `trending-tv`, `fan-favourites`, and `airing-today`.
+- `GET /api/discovery/search?q=` requires two characters and returns only movie, television and person results.
+- `GET /api/discovery/movies` and `/tv` accept validated `genre`, `year`, `decade`, `country`, `language`, `runtime_min`, `runtime_max`, `provider`, `region`, `sort`, and `page` values.
+- `GET /api/discovery/filters/:media` returns provider-backed genres, countries, languages and regional streaming providers.
+- `GET /api/discovery/charts/:media/:size?page=` supports movie/TV and sizes 100, 250 or 2,000. Every response includes formula, eligibility, source and stable tie-break metadata.
+- `GET /api/discovery/franchises/:id` labels the result as an official external franchise.
+- `GET /api/discovery/collection-kinds` defines official, editorial and user-owned collection boundaries.
+
+See [`RANKING_METHODOLOGY.md`](RANKING_METHODOLOGY.md) for the exact scoring contract.

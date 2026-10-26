@@ -49,19 +49,21 @@ type Credits struct {
 }
 
 type MediaSummary struct {
-	ID           int     `json:"id"`
-	MediaType    string  `json:"media_type,omitempty"`
-	Title        string  `json:"title,omitempty"`
-	Name         string  `json:"name,omitempty"`
-	Overview     string  `json:"overview"`
-	PosterPath   string  `json:"poster_path"`
-	BackdropPath string  `json:"backdrop_path"`
-	ReleaseDate  string  `json:"release_date,omitempty"`
-	FirstAirDate string  `json:"first_air_date,omitempty"`
-	GenreIDs     []int   `json:"genre_ids"`
-	VoteAverage  float64 `json:"vote_average"`
-	VoteCount    int     `json:"vote_count"`
-	Popularity   float64 `json:"popularity"`
+	ID                 int     `json:"id"`
+	MediaType          string  `json:"media_type,omitempty"`
+	Title              string  `json:"title,omitempty"`
+	Name               string  `json:"name,omitempty"`
+	Overview           string  `json:"overview"`
+	PosterPath         string  `json:"poster_path"`
+	BackdropPath       string  `json:"backdrop_path"`
+	ProfilePath        string  `json:"profile_path,omitempty"`
+	KnownForDepartment string  `json:"known_for_department,omitempty"`
+	ReleaseDate        string  `json:"release_date,omitempty"`
+	FirstAirDate       string  `json:"first_air_date,omitempty"`
+	GenreIDs           []int   `json:"genre_ids"`
+	VoteAverage        float64 `json:"vote_average"`
+	VoteCount          int     `json:"vote_count"`
+	Popularity         float64 `json:"popularity"`
 }
 type MovieSummary struct {
 	ID            int     `json:"id"`

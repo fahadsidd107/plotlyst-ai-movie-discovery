@@ -1,6 +1,6 @@
-const PageIntro = ({ eyebrow, title, children, meta, constellation = false }) => (
-  <header className={`page-intro${constellation ? ' page-intro--constellation' : ''}`}>
-    {constellation && <div className="constellation" aria-hidden="true" />}
+const PageIntro = ({ eyebrow, title, children, meta }) => (
+  <header className="page-intro">
+    <div className="page-intro__leader" aria-hidden="true">24 FPS</div>
     <div className="page-intro__content">
       <p className="eyebrow">{eyebrow}</p>
       <h1>{title}</h1>

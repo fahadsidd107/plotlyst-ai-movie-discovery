@@ -9,7 +9,6 @@ import Layout from './components/Layout';
 import RequiredAuth from './components/RequiredAuth';
 import axiosClient from './api/axiosConfig';
 import useAuth from './hooks/useAuth';
-import AmbientStage from './components/ui/AmbientStage';
 import LoadingScreen from './components/ui/LoadingScreen';
 import { useEffect, useState } from 'react';
 import CatalogLanding from './components/catalog/CatalogLanding';
@@ -19,6 +18,10 @@ import PersonDetail from './components/catalog/PersonDetail';
 import SeasonPage from './components/catalog/SeasonPage';
 import EpisodePage from './components/catalog/EpisodePage';
 import LoadingLab from './components/ui/LoadingLab';
+import SearchResults from './components/discovery/SearchResults';
+import DiscoverPage from './components/discovery/DiscoverPage';
+import { ChartsIndex, ChartPage } from './components/discovery/Charts';
+import { Collections, Franchise } from './components/discovery/Collections';
 import { getMovie, getMovies, getTV, getTVDetail } from './api/catalog';
 
 import {Route, Routes, useNavigate} from 'react-router-dom'
@@ -62,12 +65,17 @@ function App() {
 
   return (
     <div className="app-shell">
-      <AmbientStage />
       <Header handleLogout = {handleLogout}/>
       <Routes>
         <Route path="/test" element={<LoadingLab />}></Route>
         <Route element={<Layout />}>
           <Route path="/" element={<Home updateMovieReview={updateMovieReview}/>}></Route>
+          <Route path="/search" element={<SearchResults/>}></Route>
+          <Route path="/discover/:media" element={<DiscoverPage/>}></Route>
+          <Route path="/charts" element={<ChartsIndex/>}></Route>
+          <Route path="/charts/:media/:size" element={<ChartPage/>}></Route>
+          <Route path="/collections" element={<Collections/>}></Route>
+          <Route path="/franchise/:id" element={<Franchise/>}></Route>
           <Route path="/movies" element={<CatalogLanding kind="movie" eyebrow="The big-screen signal" title="Movies worth leaving the group chat for." copy="Fresh phenomena, modern classics and glorious oddities—programmed like the film festival in your head." loader={getMovies}/>}></Route>
           <Route path="/movie/:id" element={<DetailPage type="movie" loader={getMovie}/>}></Route>
           <Route path="/tv" element={<CatalogLanding kind="tv" eyebrow="Your next long-term commitment" title="Television that makes one more episode a threat." copy="The series everyone is talking about, and the quieter obsessions they will discover next." loader={getTV}/>}></Route>
@@ -89,7 +97,7 @@ function App() {
           <strong>Plotlyst</strong>
           <span className="site-footer__tagline">Thoughtful movie discovery, shaped around your taste.</span>
           <nav className="site-footer__contacts" aria-label="Creator contact links">
-            <a href="mailto:fsiddiqui107@gmail.com">siddiqui107@gmail.com</a>
+            <a href="mailto:siddiqui107@gmail.com">siddiqui107@gmail.com</a>
             <a href="tel:+4917623876395">+49 176 238 76 395</a>
             <a href="https://www.linkedin.com/in/muhammad-fahad-siddiqui-595484176/" target="_blank" rel="noreferrer">LinkedIn</a>
           </nav>

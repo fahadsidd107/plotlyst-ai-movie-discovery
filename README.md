@@ -37,6 +37,14 @@ Its long-term direction includes real movie and television metadata, rich search
 - Bounded TMDB retries, `Retry-After` handling and short-lived in-memory caching
 - Idempotent legacy editorial-ranking to five-star migration
 - Dedicated `/test` loading-screen laboratory
+- Progressively loaded cinematic homepage with independent programme reels
+- Accessible movie, television and people autocomplete plus full search results
+- Backend-driven discovery filters for genre, year, decade, country, language, runtime and provider
+- Movie and television Top 100, Top 250 and paginated Top 2,000 charts
+- Published weighted-ranking formula, eligibility threshold and deterministic tie-breaking
+- Trending, fan-favourite, year, decade and genre destinations
+- Explicit official-franchise, editorial-collection and user-list ownership boundaries
+- Cinema-first Midnight Premiere interface with projector, film-strip, ticket and screening-programme details
 
 ## Architecture
 
@@ -51,6 +59,7 @@ Go + Gin API (:8080)
   ├── Authentication middleware
   ├── Movie, television, people and user controllers
 	├── TMDB client → timeout / retry / rate-limit / memory cache
+	├── Discovery orchestration → homepage / search / filters / charts
   ├── Recommendation and review logic
   ├── LangChainGo → OpenAI (optional)
   └── MongoDB driver
@@ -118,6 +127,15 @@ As the domain grows, business rules will move behind handler → service → rep
 | `GET` | `/api/catalog/people/trending` | Public | Trending people |
 | `GET` | `/api/catalog/people/born-today` | Public | Timezone-aware birthday matches from the documented sample |
 | `GET` | `/api/catalog/people/:id` | Public | Person biography and combined credits |
+| `GET` | `/api/discovery/home` | Public | Concurrent aggregated homepage programme |
+| `GET` | `/api/discovery/home/:section` | Public | Independently load one progressive homepage rail |
+| `GET` | `/api/discovery/search` | Public | Normalized movie, TV and people search |
+| `GET` | `/api/discovery/movies` | Public | Filtered movie discovery |
+| `GET` | `/api/discovery/tv` | Public | Filtered television discovery |
+| `GET` | `/api/discovery/filters/:media` | Public | Provider-backed filter options |
+| `GET` | `/api/discovery/charts/:media/:size` | Public | Top 100, 250 or 2,000 chart page |
+| `GET` | `/api/discovery/franchises/:id` | Public | Official TMDB franchise |
+| `GET` | `/api/discovery/collection-kinds` | Public | Collection ownership/source definitions |
 
 ## Run locally
 
@@ -226,6 +244,8 @@ High-level sequence:
 ## Responsible external integrations
 
 The TMDB catalogue adapter keeps provider credentials on the Go server and uses timeouts, bounded retries, rate-limit handling and a short in-memory cache. TMDB content is not sent to AI providers. See [`docs/TMDB_DATA_POLICY.md`](docs/TMDB_DATA_POLICY.md) for attribution, provider and licence details.
+
+Chart eligibility, formula, stable tie-breaking and live-snapshot limits are documented in [`docs/RANKING_METHODOLOGY.md`](docs/RANKING_METHODOLOGY.md). Franchise, editorial and user-list ownership boundaries are documented in [`docs/COLLECTION_TYPES.md`](docs/COLLECTION_TYPES.md).
 
 ## Build and validation
 
