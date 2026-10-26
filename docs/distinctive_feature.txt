@@ -1,0 +1,277 @@
+# Plotlyst — Advanced Feature Development Roadmap
+
+## Step 7 — Story DNA: Intelligent Movie Characteristics & Discovery
+
+### Objective
+Build an intelligent movie analysis and discovery system that goes beyond traditional genre-based recommendations.
+
+### Features
+- Introduce a Story DNA profile for each supported movie.
+- Classify movies by narrative structure, emotional tone, pacing, complexity, storytelling style, and ending characteristics.
+- Display Story DNA on the movie detail page using interactive visualizations.
+- Allow users to discover movies with similar narrative characteristics.
+- Enable searches such as "Find movies like Inception but with a simpler storyline" or "Find nonlinear psychological thrillers released after 2020."
+- Generate explainable recommendations describing the similarities between two films.
+- Introduce adjustable similarity filters, allowing users to prioritize mood, pacing, complexity, or story structure.
+- Keep spoiler-sensitive characteristics hidden unless requested.
+
+### Backend Requirements
+- Extend the existing Go and Gin architecture.
+- Create a Story DNA classification model and service.
+- Store permitted, structured movie characteristics in MongoDB.
+- Implement similarity scoring using weighted characteristics.
+- Integrate LangChainGo and OpenAI where authorized for structured classification and explanations.
+- Validate AI-generated characteristics before persisting them.
+- Maintain data provenance and classification confidence.
+
+### Frontend Requirements
+- Add a Story DNA section to movie detail pages.
+- Create interactive characteristic visualizations.
+- Build a dedicated Story DNA discovery page.
+- Allow users to adjust similarity preferences.
+- Display explanations for recommended movies.
+
+### Completion Criteria
+Users can open a movie, understand its storytelling characteristics, and discover other movies sharing specific characteristics using real, validated data.
+
+---
+
+## Step 8 — Spoiler Firewall: Personalized Spoiler Protection
+
+### Objective
+Introduce an intelligent spoiler prevention system that protects users from unwanted movie and television spoilers throughout Plotlyst.
+
+### Features
+- Add three spoiler protection modes: Off, Standard, and Strict.
+- Allow users to configure spoiler preferences in their account settings.
+- Hide spoiler-tagged reviews and comments automatically.
+- Support spoiler-sensitive sections on movie and TV detail pages.
+- For television series, use the user's last watched episode to determine which information should remain hidden.
+- Allow users to reveal individual spoilers manually.
+- Prevent accidental spoilers in search previews, recommendations, and episode descriptions.
+- Support spoiler tagging when writing reviews.
+- Optionally identify potentially unmarked spoilers using AI, with conservative handling and moderation review.
+
+### Backend Requirements
+- Create persistent spoiler preferences in MongoDB.
+- Integrate spoiler visibility rules with existing user profiles and episode progress.
+- Extend review and comment models with spoiler metadata.
+- Implement server-side spoiler filtering and redaction for relevant API responses.
+- Add safeguards against revealing hidden spoilers through previews or notifications.
+- Use AI spoiler detection only with authorized data and appropriate safeguards.
+
+### Frontend Requirements
+- Create spoiler preference controls.
+- Add blurred or concealed spoiler containers.
+- Implement click-to-reveal interactions.
+- Display clear spoiler warnings.
+- Integrate protection into reviews, TV episodes, and recommendations.
+- Ensure accessibility for keyboard and screen-reader users.
+
+### Completion Criteria
+Users can browse films and TV shows according to their preferred spoiler protection level without accidentally encountering information beyond their selected viewing progress.
+
+---
+
+## Step 9 — Plotlyst Debate: AI-Powered Audience Opinion Analysis
+
+### Objective
+Build a review intelligence feature that explains why audiences love, dislike, or disagree about particular films.
+
+### Features
+- Introduce a "What Viewers Loved" section.
+- Introduce a "What Viewers Disliked" section.
+- Analyze common themes across genuine Plotlyst community reviews.
+- Highlight frequently mentioned characteristics such as acting, cinematography, pacing, writing, soundtrack, and direction.
+- Compare opinions from high-rating and low-rating reviewers.
+- Identify movies with unusually polarized rating distributions.
+- Display a rating distribution chart.
+- Allow users to explore supporting original reviews.
+- Generate spoiler-safe summaries where possible.
+- Clearly distinguish AI-generated summaries from user-authored content.
+
+### Backend Requirements
+- Build a review aggregation service in Go.
+- Use MongoDB aggregation pipelines to calculate rating distributions.
+- Develop a review sentiment and theme extraction pipeline with LangChainGo.
+- Process review-analysis jobs asynchronously when appropriate.
+- Cache generated summaries.
+- Recalculate summaries when sufficient new reviews become available.
+- Require a meaningful minimum review sample size.
+- Link generated observations to the real reviews supporting them.
+- Never fabricate community sentiment when insufficient data exists.
+
+### Frontend Requirements
+- Add a Plotlyst Debate tab on movie detail pages.
+- Display positive and negative opinion summaries.
+- Build interactive rating distribution charts.
+- Allow filtering by rating category.
+- Provide expandable evidence linking to real reviews.
+- Display clear insufficient-data states.
+
+### Completion Criteria
+Users can understand the main reasons a movie receives positive and negative ratings, with summaries grounded in authentic community reviews.
+
+---
+
+## Step 10 — Alternate Cut: Movie Edition Comparison Lab
+
+### Objective
+Build a dedicated system for exploring and comparing officially released versions of the same film.
+
+### Features
+- Display available editions of supported movies.
+- Support theatrical cuts, director's cuts, extended editions, remastered releases, and documented alternate versions.
+- Compare runtime differences.
+- Compare release dates.
+- Explain officially documented content differences.
+- Display technical format information where verified.
+- Allow users to rate individual editions where editions are meaningfully distinct.
+- Allow users to indicate which edition they watched.
+- Display community edition preferences.
+- Show regional availability where reliable information exists.
+- Offer side-by-side comparisons.
+
+### Backend Requirements
+- Create a movie editions model in MongoDB.
+- Associate multiple editions with one canonical movie.
+- Design version-specific rating and viewing records.
+- Build an edition comparison service.
+- Store verified edition metadata and source references.
+- Allow editorial administrators to manage edition records.
+- Prevent an LLM from inventing alternate scenes, runtimes, or release versions.
+- Integrate external edition data only where licensing and availability permit.
+
+### Frontend Requirements
+- Add an "Alternate Cuts" section to supported movies.
+- Create a movie edition comparison page.
+- Display side-by-side edition cards.
+- Highlight verified differences.
+- Include an edition selector for user ratings and viewing history.
+- Provide a clear message when no documented alternate editions exist.
+
+### Completion Criteria
+Users can compare real, documented movie editions, understand their differences, and record which version they watched.
+
+---
+
+## Step 11 — Taste Clash: Movie Compatibility & Shared Watchlists
+
+### Objective
+Create a social movie compatibility engine that compares users' preferences and helps them discover films they can enjoy together.
+
+### Features
+- Allow two users to compare movie preferences.
+- Calculate taste compatibility from overlapping ratings and genre preferences.
+- Display shared favourite genres.
+- Highlight movies both users rated highly.
+- Identify their biggest movie disagreements.
+- Show compatible directors, actors, and storytelling preferences.
+- Suggest movies neither user has watched.
+- Generate a shared movie-night shortlist.
+- Allow users to create collaborative playlists.
+- Expand compatibility matching to groups of three or more users.
+- Provide explanations for recommendations.
+- Respect profile visibility and privacy settings.
+
+### Backend Requirements
+- Build a compatibility scoring service in Go.
+- Use overlap-adjusted rating similarity instead of relying only on genre matches.
+- Account for insufficient shared ratings and sparse user data.
+- Store collaborative playlist membership and permissions.
+- Implement group preference aggregation.
+- Use MongoDB for user preferences, ratings, and list membership.
+- Integrate LangChainGo for personalized explanations where authorized.
+- Never expose private ratings or viewing history without permission.
+
+### Frontend Requirements
+- Build a Taste Clash comparison page.
+- Display a compatibility score when enough data exists.
+- Show shared interests and disagreements.
+- Create interactive preference comparisons.
+- Display personalized movie recommendations for both users.
+- Support collaborative watchlist and playlist creation.
+- Add an invitation mechanism for group movie nights.
+
+### Completion Criteria
+Users can compare their movie tastes, discover meaningful similarities and disagreements, and build a shared watchlist containing suitable movies.
+
+---
+
+## Step 12 — Cinema Time Machine: Personal Taste Evolution & Analytics
+
+### Objective
+Create a personal cinema analytics experience that shows how a user's movie preferences and viewing habits evolve over time.
+
+### Features
+- Build an interactive viewing-history timeline.
+- Show movies watched per month and year.
+- Track favourite genres over time.
+- Track changes in average user ratings.
+- Display most-watched actors and directors.
+- Show preferred movie decades.
+- Analyze preferred movie runtimes.
+- Highlight changes in storytelling and mood preferences when Story DNA data exists.
+- Compare viewing activity between years.
+- Generate a personal annual movie recap.
+- Allow users to discover movies from historical periods they rarely explore.
+- Support private and optionally shareable viewing summaries.
+- Include explainable AI observations based on actual viewing history.
+
+### Backend Requirements
+- Create a viewing analytics service in Go.
+- Aggregate user ratings and viewing history through MongoDB.
+- Use explicit watched dates rather than treating ratings as proof of viewing.
+- Develop efficient time-based aggregation pipelines.
+- Support filtering by date, genre, rating, and content type.
+- Generate personalized statistical summaries.
+- Integrate LangChainGo for grounded natural-language insights where authorized.
+- Cache expensive analytics where appropriate.
+- Respect privacy and data deletion preferences.
+
+### Frontend Requirements
+- Create a dedicated Cinema Time Machine page.
+- Add interactive timelines.
+- Display genre evolution charts.
+- Build yearly comparison dashboards.
+- Show viewing milestones and annual recaps.
+- Allow users to filter by year and content type.
+- Provide shareable summary cards without exposing private information.
+- Support mobile-friendly interactive charts.
+
+### Completion Criteria
+Users can explore how their movie tastes and viewing habits have evolved, compare different periods, and discover meaningful patterns based on their actual activity.
+
+---
+
+# Shared Engineering Requirements for Steps 7–12
+
+All six features must follow these principles:
+
+1. Preserve the existing React, Go, Gin, MongoDB, and LangChainGo architecture.
+2. Extend existing services and components rather than duplicating them.
+3. Use real, authorized data instead of fabricated movie analysis.
+4. Respect TMDB licensing restrictions, particularly around AI processing and embedding third-party content.
+5. Use OpenAI only when appropriate and when the underlying data is permitted for that processing.
+6. Implement proper authentication and authorization for user-specific features.
+7. Include frontend, backend, database, validation, testing, and documentation.
+8. Add suitable MongoDB indexes and pagination.
+9. Support responsive design using the established Plotlyst color palette and component system.
+10. Provide loading, error, empty, and insufficient-data states.
+11. Add meaningful unit and integration tests.
+12. Ensure features remain usable when AI services are unavailable.
+13. Never claim unavailable, hypothetical, or AI-inferred information is verified.
+14. Document every significant new collection, service, and API endpoint.
+
+# Recommended Implementation Sequence
+
+| Step | Feature | Primary Engineering Focus |
+|---|---|---|
+| 7 | Story DNA | Semantic classification and similarity ranking |
+| 8 | Spoiler Firewall | Stateful personalization and content protection |
+| 9 | Plotlyst Debate | LLM analysis and MongoDB aggregation |
+| 10 | Alternate Cut | Complex content relationships and data modeling |
+| 11 | Taste Clash | Collaborative recommendations and social features |
+| 12 | Cinema Time Machine | Time-series analytics and personalized insights |
+
+**Final instruction to Codex:** Implement each step as a complete vertical feature, not just a frontend demonstration. Reuse existing infrastructure, validate the data source, write tests, and make the feature fully functional before proceeding to the next step.

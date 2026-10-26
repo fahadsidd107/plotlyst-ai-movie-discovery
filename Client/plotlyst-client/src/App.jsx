@@ -94,7 +94,7 @@ function App() {
             <a href="https://www.linkedin.com/in/muhammad-fahad-siddiqui-595484176/" target="_blank" rel="noreferrer">LinkedIn</a>
           </nav>
           <span className="site-footer__copyright">© {new Date().getFullYear()} Plotlyst</span>
-          <span className="site-footer__credits">Catalogue data by <a href="https://www.themoviedb.org/" target="_blank" rel="noreferrer">TMDB</a>. Availability by <a href="https://www.justwatch.com/" target="_blank" rel="noreferrer">JustWatch</a>. This product uses the TMDB API but is not endorsed or certified by TMDB.</span>
+          <span className="site-footer__credits"><a className="tmdb-credit" href="https://www.themoviedb.org/" target="_blank" rel="noreferrer"><img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_2-d537fb228cf3ded904ef09b136fe3fec72548ebc1fea3fbbd1ad9e36364db38b.svg" alt="TMDB" /></a> Catalogue data by TMDB. Availability by <a href="https://www.justwatch.com/" target="_blank" rel="noreferrer">JustWatch</a>. This product uses the TMDB API but is not endorsed or certified by TMDB.</span>
         </div>
       </footer>
     </div>

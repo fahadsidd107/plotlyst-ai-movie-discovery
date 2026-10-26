@@ -12,6 +12,7 @@ const AmbientStage = () => {
     let frameId;
     let scrollTimer;
     let paused = false;
+    let lastFrame = 0;
     let particles = [];
 
     const resize = () => {
@@ -21,7 +22,7 @@ const AmbientStage = () => {
       canvas.style.width = `${window.innerWidth}px`;
       canvas.style.height = `${window.innerHeight}px`;
       context.setTransform(ratio, 0, 0, ratio, 0, 0);
-      particles = Array.from({ length: Math.min(30, Math.floor(window.innerWidth / 42)) }, () => ({
+      particles = Array.from({ length: Math.min(18, Math.floor(window.innerWidth / 64)) }, () => ({
         x: Math.random() * window.innerWidth,
         y: Math.random() * window.innerHeight,
         vx: (Math.random() - 0.5) * 0.18,
@@ -38,7 +39,12 @@ const AmbientStage = () => {
     const onPointerLeave = () => Object.assign(pointer, { x: -1000, y: -1000 });
     const onPointerDown = (event) => ripples.push({ x: event.clientX, y: event.clientY, radius: 0, alpha: 0.45 });
 
-    const draw = () => {
+    const draw = (timestamp = 0) => {
+      if (timestamp - lastFrame < 40) {
+        frameId = requestAnimationFrame(draw);
+        return;
+      }
+      lastFrame = timestamp;
       context.clearRect(0, 0, window.innerWidth, window.innerHeight);
       particles.forEach((particle) => {
         if (!reducedMotion) {
@@ -81,6 +87,7 @@ const AmbientStage = () => {
     const resume = () => {
       if (!paused || document.hidden) return;
       paused = false;
+      lastFrame = 0;
       frameId = requestAnimationFrame(draw);
     };
     const onScroll = () => {
@@ -92,7 +99,10 @@ const AmbientStage = () => {
     const onVisibility = () => {
       paused = document.hidden;
       cancelAnimationFrame(frameId);
-      if (!paused) frameId = requestAnimationFrame(draw);
+      if (!paused) {
+        lastFrame = 0;
+        frameId = requestAnimationFrame(draw);
+      }
     };
 
     resize();

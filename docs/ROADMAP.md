@@ -16,15 +16,17 @@ This plan translates the master product brief into manageable vertical slices. A
 
 ## Step 2 — Real movies, television and people
 
-⬜ Build a Go integration client for TMDB with timeouts, retries, caching and rate-limit handling.  
-⬜ Add separate summary/detail DTOs for movies, television, seasons, episodes and people.  
-⬜ Implement movie and television landing pages plus complete detail pages.  
-⬜ Add cast, crew, franchises, release data, recommendations and regional providers.  
-⬜ Implement people profiles, trending people and date-aware “Born Today”.  
-⬜ Create a compatibility migration from legacy editorial rankings to five-star semantics.  
-⬜ Verify licensing, attribution and AI-processing permissions before using provider data.
+✅ Build a Go integration client for TMDB with timeouts, retries, caching and rate-limit handling.
+✅ Add separate summary/detail DTOs for movies, television, seasons, episodes and people.
+✅ Implement movie and television landing pages plus complete detail pages.
+✅ Add cast, crew, franchises, release data, recommendations and regional providers.
+✅ Implement people profiles, trending people and date-aware “Born Today”.
+✅ Create a compatibility migration from legacy editorial rankings to five-star semantics.
+✅ Verify licensing, attribution and AI-processing permissions before using provider data.
 
 **Outcome:** real, navigable catalogue data supplied through the Go backend.
+
+**Runtime verification:** implementation and automated tests are complete. The TMDB credential currently configured in the local `.env` is rejected by TMDB as invalid, so live catalogue rendering remains blocked until an active v3 API key is supplied.
 
 ## Step 3 — Discovery, search and charts
 

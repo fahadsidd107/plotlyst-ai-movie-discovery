@@ -110,6 +110,13 @@ type ReleaseCountry struct {
 type ReleaseDates struct {
 	Results []ReleaseCountry `json:"results"`
 }
+type ContentRating struct {
+	Rating   string `json:"rating"`
+	ISO31661 string `json:"iso_3166_1"`
+}
+type ContentRatings struct {
+	Results []ContentRating `json:"results"`
+}
 
 type MovieDetail struct {
 	ID                  int                `json:"id"`
@@ -168,6 +175,7 @@ type TVDetail struct {
 	Credits             Credits            `json:"credits"`
 	Recommendations     Page[MediaSummary] `json:"recommendations"`
 	WatchProviders      WatchProviders     `json:"watch/providers"`
+	ContentRatings      ContentRatings     `json:"content_ratings"`
 }
 
 type EpisodeSummary struct {

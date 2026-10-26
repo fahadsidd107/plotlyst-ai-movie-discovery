@@ -4,7 +4,7 @@
 
 Plotlyst is an evolving, full-stack movie discovery and recommendation platform. It combines a React experience with a Go/Gin API, MongoDB persistence, secure cookie-based authentication, preference-driven recommendations, and optional AI-assisted review analysis through LangChainGo and OpenAI.
 
-The current release is a working foundation rather than a collection of static mockups: users can browse seeded films, create accounts, authenticate, receive genre-based recommendations, and—when authorized as an administrator—write and classify reviews that persist in MongoDB.
+The current release combines the original MongoDB-backed editorial catalogue with a server-side TMDB adapter for real movies, television, seasons, episodes and people. Users can browse media, inspect credits, regional release/provider information and recommendations, create accounts, receive genre-based recommendations, and—when authorized—write persisted editorial reviews.
 
 ## Why this project exists
 
@@ -31,6 +31,12 @@ Its long-term direction includes real movie and television metadata, rich search
 - Idempotent local seed-data bootstrap
 - Single-command local development for the database, API, and frontend
 - Responsive React UI with loading and error states
+- TMDB-backed movie and television landing/detail experiences
+- Seasons, episodes, people profiles, trending people and date-aware Born Today
+- Cast, crew, franchises, certifications, recommendations and German provider availability
+- Bounded TMDB retries, `Retry-After` handling and short-lived in-memory caching
+- Idempotent legacy editorial-ranking to five-star migration
+- Dedicated `/test` loading-screen laboratory
 
 ## Architecture
 
@@ -43,7 +49,8 @@ React + Vite client (:5173)
   ▼
 Go + Gin API (:8080)
   ├── Authentication middleware
-  ├── Movie and user controllers
+  ├── Movie, television, people and user controllers
+	├── TMDB client → timeout / retry / rate-limit / memory cache
   ├── Recommendation and review logic
   ├── LangChainGo → OpenAI (optional)
   └── MongoDB driver
@@ -60,6 +67,9 @@ Server/PlotlystServer/
 ├── database/       # MongoDB connection and collection access
 ├── middleware/     # Authentication and request authorization
 ├── models/         # BSON/JSON domain models
+├── tmdb/           # Typed provider DTOs and resilient HTTP client
+├── migration/      # Idempotent rating compatibility rules
+├── cmd/             # Runnable maintenance commands
 ├── routes/         # Public and protected route registration
 ├── utils/          # JWT creation, validation, and token persistence
 └── main.go         # Configuration, CORS, database, and server bootstrap
@@ -71,15 +81,15 @@ As the domain grows, business rules will move behind handler → service → rep
 
 | Area | Current implementation | Planned evolution |
 |---|---|---|
-| Frontend | React 19, Vite, React Router, Axios | Design system, advanced discovery, accessibility and component tests |
-| UI | Bootstrap, React Bootstrap, Font Awesome | Midnight Pop visual language and reusable tokens |
-| Backend | Go, Gin, context-aware MongoDB driver | Versioned API, service/repository layers and OpenAPI |
+| Frontend | React 19, Vite, React Router, Axios | Advanced discovery, accessibility and component tests |
+| UI | Midnight Pop cinema design system, Bootstrap, React Bootstrap | Component tests and deeper interaction polish |
+| Backend | Go, Gin, context-aware MongoDB driver, resilient TMDB client | Service/repository layers and OpenAPI |
 | Database | MongoDB with BSON models and seed automation | Indexed ratings, reviews, lists, activity and cache collections |
 | Authentication | bcrypt, JWT access/refresh tokens, HTTP-only cookies | Session hardening, moderation roles and account settings |
 | AI | LangChainGo + optional OpenAI, offline fallback | Structured natural-language search and explainable recommendations |
 | Live features | Not implemented yet | WebSocket-powered notifications and collaborative group sessions |
-| Catalogue data | Curated local fixtures | Server-side TMDB integration with caching and attribution |
-| Quality | Go build checks, ESLint/build scripts | Unit, integration, frontend and contract test suites |
+| Catalogue data | TMDB plus compatible curated local fixtures | Search, charts and licensed specialist providers |
+| Quality | Go unit tests, provider-client tests, migration tests, ESLint and Vite builds | Frontend and contract test suites |
 | Delivery | One-command local environment | Docker, CI/CD, Vercel frontend and containerized API hosting |
 
 ## Current API
@@ -99,6 +109,15 @@ As the domain grows, business rules will move behind handler → service → rep
 | `GET` | `/recommendedmovies` | Authenticated | Recommend films by favourite genres |
 | `POST` | `/addmovie` | Authenticated | Add a validated movie document |
 | `PATCH` | `/updatereview/:imdb_id` | Administrator | Update and classify an editorial review |
+| `GET` | `/api/catalog/movies` | Public | Popular or trending TMDB movies |
+| `GET` | `/api/catalog/movies/:id` | Public | Movie, credits, releases, providers and recommendations |
+| `GET` | `/api/catalog/tv` | Public | Popular or trending TMDB television |
+| `GET` | `/api/catalog/tv/:id` | Public | Series, seasons, credits, providers and recommendations |
+| `GET` | `/api/catalog/tv/:id/seasons/:season` | Public | Season and episode summaries |
+| `GET` | `/api/catalog/tv/:id/seasons/:season/episodes/:episode` | Public | Complete episode details |
+| `GET` | `/api/catalog/people/trending` | Public | Trending people |
+| `GET` | `/api/catalog/people/born-today` | Public | Timezone-aware birthday matches from the documented sample |
+| `GET` | `/api/catalog/people/:id` | Public | Person biography and combined credits |
 
 ## Run locally
 
@@ -165,6 +184,8 @@ VITE_API_BASE_URL=http://localhost:8080
 ```
 
 Generate JWT secrets with `openssl rand -hex 32`. Environment files are ignored by Git; never commit real secrets.
+
+The browser never receives `TMDB_API_KEY`. If TMDB returns `Invalid API key`, create or activate a v3 key in your TMDB account and replace only the value in `Server/PlotlystServer/.env`.
 
 `OPENAI_API_KEY` is optional. Without it, review updates use the deterministic offline classifier. With it, the backend uses LangChainGo to make a real model request and validates the returned ranking before persistence.
 
