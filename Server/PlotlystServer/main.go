@@ -32,6 +32,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("database connection failed: %v", err)
 	}
+	indexCtx, cancelIndexes := context.WithTimeout(context.Background(), 15*time.Second)
+	if err := database.EnsureIndexes(indexCtx, client); err != nil {
+		cancelIndexes()
+		log.Fatalf("database index setup failed: %v", err)
+	}
+	cancelIndexes()
 
 	router := gin.New()
 	router.Use(gin.Logger(), gin.Recovery())
@@ -54,6 +60,7 @@ func main() {
 	tmdbClient := tmdb.New(cfg.TMDBBaseURL, cfg.TMDBAPIKey, cfg.TMDBTimeout, cfg.TMDBCacheTTL, cfg.TMDBMaxRetries)
 	routes.SetupCatalogRoutes(router, controllers.NewCatalogController(tmdbClient, cfg.TMDBImageBaseURL))
 	routes.SetupProtectedRoutes(router, client)
+	routes.SetupCommunityRoutes(router, client)
 
 	server := &http.Server{
 		Addr:              ":" + cfg.Port,

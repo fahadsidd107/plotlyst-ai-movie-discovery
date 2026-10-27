@@ -2,10 +2,10 @@ import {useState} from 'react';
 import Container from 'react-bootstrap/Container';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
-import axiosClient from '../../api/axiosConfig';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import logo from '../../assets/PlotlystIcon.png';
+import { authApi } from '../../api/step4';
 
 const Login = () => {
     
@@ -26,14 +26,8 @@ const Login = () => {
         setError(null);       
 
         try {
-            const response = await axiosClient.post('/login', { email, password });
-            console.log(response.data);
-            if (response.data.error) {
-                setError(response.data.error);
-                return;
-            }
-           // console.log(response.data);
-            setAuth(response.data);
+            const session = await authApi.login({ email, password });
+            setAuth(session);
             
            // localStorage.setItem('user', JSON.stringify(response.data));
             // Handle successful login (e.g., store token, redirect)

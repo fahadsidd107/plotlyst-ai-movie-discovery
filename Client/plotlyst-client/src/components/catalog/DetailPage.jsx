@@ -4,6 +4,7 @@ import useCatalog from '../../hooks/useCatalog';
 import CatalogCard from './CatalogCard';
 import LoadingScreen from '../ui/LoadingScreen';
 import { ErrorState } from '../ui/States';
+import CommunityPanel from '../community/CommunityPanel';
 
 const DetailPage = ({ type, loader }) => {
   const { id } = useParams();
@@ -43,6 +44,7 @@ const DetailPage = ({ type, loader }) => {
       {cast.length > 0 && <section><div className="section-heading"><div><p className="eyebrow">Faces in focus</p><h2>Cast</h2></div></div><div className="people-rail">{cast.map(person => <CatalogCard key={`${person.id}-${person.character}`} item={person} meta={meta} type="people" profile />)}</div></section>}
       {(crew.length > 0 || providers) && <section className="detail-columns"><div><p className="eyebrow">Behind the frame</p><h2>Key crew</h2>{crew.slice(0, 8).map(p => <p key={`${p.id}-${p.job}`}><strong>{p.name}</strong><span>{p.job}</span></p>)}</div><div><p className="eyebrow">Watch in Germany</p><h2>Providers</h2><p>{[...(providers?.flatrate || []), ...(providers?.rent || [])].map(p => p.provider_name).filter((v, i, a) => a.indexOf(v) === i).join(' · ') || 'No regional provider data available.'}</p><small>Streaming availability data by JustWatch.</small></div></section>}
       {recommendations.length > 0 && <section><div className="section-heading"><div><p className="eyebrow">Keep the signal going</p><h2>You may also like</h2></div></div><div className="recommendations-rail">{recommendations.slice(0, 10).map(rec => <CatalogCard key={rec.id} item={rec} meta={meta} type={type} />)}</div></section>}
+      <CommunityPanel mediaType={type} mediaId={id} title={title} posterPath={item.poster_path} />
     </div>
   </article>;
 };

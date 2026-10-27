@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -34,6 +35,8 @@ func RegisterUser(client *mongo.Client) gin.HandlerFunc {
 			apiresponse.Error(c, http.StatusBadRequest, "invalid_request", "The registration payload is invalid")
 			return
 		}
+		user.Email = strings.ToLower(strings.TrimSpace(user.Email))
+		user.Role = models.RoleUser
 		validate := validator.New()
 
 		if err := validate.Struct(user); err != nil {
@@ -89,6 +92,7 @@ func LoginUser(client *mongo.Client) gin.HandlerFunc {
 			apiresponse.Error(c, http.StatusBadRequest, "invalid_request", "The login payload is invalid")
 			return
 		}
+		userLogin.Email = strings.ToLower(strings.TrimSpace(userLogin.Email))
 
 		var ctx, cancel = context.WithTimeout(c, 100*time.Second)
 		defer cancel()
@@ -160,17 +164,12 @@ func LogoutHandler(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Clear the access_token cookie
 
-		var UserLogout struct {
-			UserId string `json:"user_id"`
-		}
-
-		err := c.ShouldBindJSON(&UserLogout)
+		userID, err := utils.GetUserIdFromContext(c)
 		if err != nil {
-			apiresponse.Error(c, http.StatusBadRequest, "invalid_request", "The logout payload is invalid")
+			apiresponse.Error(c, http.StatusUnauthorized, "authentication_required", "Authentication is required")
 			return
 		}
-
-		err = utils.UpdateAllTokens(UserLogout.UserId, "", "", client) // Clear tokens in the database
+		err = utils.UpdateAllTokens(userID, "", "", client)
 		// Optionally, you can also remove the user session from the database if needed
 
 		if err != nil {

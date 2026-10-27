@@ -44,15 +44,17 @@ This plan translates the master product brief into manageable vertical slices. A
 
 ## Step 4 — Community and personal library
 
-⬜ Harden authentication and introduce USER, MODERATOR and ADMIN authorization.  
-⬜ Add profiles, avatars, preferences, privacy controls and regional settings.  
-⬜ Implement one five-star rating per user/media item with aggregate distributions.  
-⬜ Implement review create/edit/delete, spoilers, helpful votes, replies and reporting.  
-⬜ Add private watchlists and independently owned custom playlists.  
-⬜ Add watched history plus season and episode progress tracking.  
-⬜ Add moderation, sanitization, rate limits, compound indexes and ownership tests.
+✅ Harden authentication and introduce USER, MODERATOR and ADMIN authorization.
+✅ Add profiles, avatars, preferences, privacy controls and regional settings.
+✅ Implement one five-star rating per user/media item with aggregate distributions.
+✅ Implement review create/edit/delete, spoilers, helpful votes, replies and reporting.
+✅ Add private watchlists and independently owned custom playlists.
+✅ Add watched history plus season and episode progress tracking.
+✅ Add moderation, sanitization, rate limits, compound indexes and ownership tests.
 
 **Outcome:** authenticated activity persists correctly and remains owner-controlled.
+
+**Security boundary:** registration always creates a USER; elevated roles remain server-managed. Community writes use authoritative cookie identity, active-account checks, owner-scoped filters, unique compound indexes, plain-text sanitization and endpoint rate limits. Avatar fields accept URLs; binary avatar upload requires separately configured object storage.
 
 ## Step 5 — Verified specialist data
 

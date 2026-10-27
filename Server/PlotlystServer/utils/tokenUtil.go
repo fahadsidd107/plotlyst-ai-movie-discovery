@@ -2,6 +2,8 @@ package utils
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"os"
 	"time"
@@ -73,10 +75,15 @@ func UpdateAllTokens(userId, token, refreshToken string, client *mongo.Client) (
 
 	updateAt, _ := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 
+	refreshHash := ""
+	if refreshToken != "" {
+		digest := sha256.Sum256([]byte(refreshToken))
+		refreshHash = hex.EncodeToString(digest[:])
+	}
 	updateData := bson.M{
 		"$set": bson.M{
-			"token":         token,
-			"refresh_token": refreshToken,
+			"token":         "",
+			"refresh_token": refreshHash,
 			"update_at":     updateAt,
 		},
 	}
@@ -116,13 +123,13 @@ func ValidateToken(tokenString string) (*SignedDetails, error) {
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv("SECRET_KEY")), nil
-	})
+	}, jwt.WithIssuer("Plotlyst"), jwt.WithValidMethods([]string{"HS256"}), jwt.WithExpirationRequired())
 	if err != nil {
 		return nil, err
 	}
 
-	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-		return nil, err
+	if !token.Valid {
+		return nil, errors.New("invalid token")
 	}
 
 	if claims.ExpiresAt.Time.Before(time.Now()) {
@@ -172,14 +179,14 @@ func ValidateRefreshToken(tokenString string) (*SignedDetails, error) {
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 
 		return []byte(os.Getenv("SECRET_REFRESH_KEY")), nil
-	})
+	}, jwt.WithIssuer("Plotlyst"), jwt.WithValidMethods([]string{"HS256"}), jwt.WithExpirationRequired())
 
 	if err != nil {
 		return nil, err
 	}
 
-	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-		return nil, err
+	if !token.Valid {
+		return nil, errors.New("invalid refresh token")
 	}
 
 	if claims.ExpiresAt.Time.Before(time.Now()) {

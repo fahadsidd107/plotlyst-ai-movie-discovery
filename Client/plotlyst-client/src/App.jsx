@@ -7,7 +7,6 @@ import Register from './components/register/Register';
 import Login from './components/login/Login';
 import Layout from './components/Layout';
 import RequiredAuth from './components/RequiredAuth';
-import axiosClient from './api/axiosConfig';
 import useAuth from './hooks/useAuth';
 import LoadingScreen from './components/ui/LoadingScreen';
 import { useEffect, useState } from 'react';
@@ -23,13 +22,18 @@ import DiscoverPage from './components/discovery/DiscoverPage';
 import { ChartsIndex, ChartPage } from './components/discovery/Charts';
 import { Collections, Franchise } from './components/discovery/Collections';
 import { getMovie, getMovies, getTV, getTVDetail } from './api/catalog';
+import { authApi } from './api/step4';
+import RoleGuard from './components/RoleGuard';
+import { LibraryDashboard, WatchlistPage, HistoryPage, PlaylistPage } from './components/library/LibraryPages';
+import { PublicProfile, ProfileSettings, PrivacySettings, PreferenceSettings } from './components/profile/ProfilePages';
+import Moderation from './components/moderation/Moderation';
 
 import {Route, Routes, useNavigate} from 'react-router-dom'
 
 function App() {
 
   const navigate = useNavigate();
-  const { auth, setAuth } = useAuth();
+  const { setAuth } = useAuth();
   const [showIntro, setShowIntro] = useState(() => sessionStorage.getItem('plotlyst-intro-seen') !== 'true');
 
   useEffect(() => {
@@ -49,11 +53,8 @@ function App() {
   const handleLogout = async () => {
 
         try {
-            const response = await axiosClient.post("/logout",{user_id: auth.user_id});
-            console.log(response.data);
+            await authApi.logout();
             setAuth(null);
-           // localStorage.removeItem('user');
-            console.log('User logged out');
 
         } catch (error) {
             console.error('Error logging out:', error);
@@ -84,12 +85,21 @@ function App() {
           <Route path="/tv/:id/seasons/:season/episodes/:episode" element={<EpisodePage/>}></Route>
           <Route path="/people" element={<PeoplePage/>}></Route>
           <Route path="/people/:id" element={<PersonDetail/>}></Route>
+          <Route path="/profile/:username" element={<PublicProfile/>}></Route>
           <Route path="/register" element={<Register/>}></Route>
           <Route path="/login" element={<Login/>}></Route>
           <Route element = {<RequiredAuth/>}>
               <Route path="/recommended" element={<Recommended/>}></Route>
               <Route path="/review/:imdb_id" element={<Review/>}></Route>
+              <Route path="/library" element={<LibraryDashboard/>}></Route>
+              <Route path="/library/watchlist" element={<WatchlistPage/>}></Route>
+              <Route path="/library/history" element={<HistoryPage/>}></Route>
+              <Route path="/playlists/:id" element={<PlaylistPage/>}></Route>
+              <Route path="/settings/profile" element={<ProfileSettings/>}></Route>
+              <Route path="/settings/privacy" element={<PrivacySettings/>}></Route>
+              <Route path="/settings/preferences" element={<PreferenceSettings/>}></Route>
           </Route>
+          <Route element={<RoleGuard roles={['MODERATOR','ADMIN']}/>}><Route path="/moderation" element={<Moderation/>}/></Route>
         </Route>
       </Routes>
       <footer className="site-footer">

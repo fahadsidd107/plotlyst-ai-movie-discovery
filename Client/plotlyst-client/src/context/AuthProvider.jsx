@@ -1,37 +1,20 @@
-import {createContext, useState,useEffect} from 'react';
+import {createContext, useState,useEffect, useCallback} from 'react';
+import { authApi } from '../api/step4';
 
 const AuthContext = createContext({});
 
 export const AuthProvider = ({children}) => {
-    const [auth, setAuth] = useState();
+    const [auth, setAuth] = useState(null);
     const [loading, setLoading] = useState(true);
-        useEffect(() => {
-                try { 
-                    const storedUser = localStorage.getItem('user');
-
-                     if (storedUser) {
-          
-                        const parsedUser = JSON.parse(storedUser);
-                        setAuth(parsedUser);
-  
-                    }
-              } catch (error) {
-                        console.error('Failed to parse user from localStorage', error);
-                } finally{
-                    setLoading(false);
-            }
-    },[]);
-    useEffect(()=>{
-        if (auth){
-            localStorage.setItem('user', JSON.stringify(auth));
-        }
-        else{
-            localStorage.removeItem('user');
-        }
-    },[auth])
+    const hydrate = useCallback(async () => {
+        try { setAuth(await authApi.session()); }
+        catch { setAuth(null); }
+        finally { setLoading(false); }
+    }, []);
+    useEffect(() => { hydrate(); }, [hydrate]);
 
     return (
-        <AuthContext.Provider value = {{auth,setAuth,loading}}>
+        <AuthContext.Provider value = {{auth,setAuth,loading,hydrate}}>
             {children}
         </AuthContext.Provider>
     )

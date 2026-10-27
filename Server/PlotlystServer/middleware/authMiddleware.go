@@ -14,16 +14,19 @@ func AuthMiddleWare() gin.HandlerFunc {
 
 		if err != nil {
 			apiresponse.Error(c, http.StatusUnauthorized, "authentication_required", "Authentication is required")
+			c.Abort()
 			return
 		}
 		if token == "" {
 			apiresponse.Error(c, http.StatusUnauthorized, "authentication_required", "Authentication is required")
+			c.Abort()
 			return
 		}
 		claims, err := utils.ValidateToken(token)
 
 		if err != nil {
 			apiresponse.Error(c, http.StatusUnauthorized, "invalid_token", "The access token is invalid or expired")
+			c.Abort()
 			return
 		}
 		c.Set("userId", claims.UserId)

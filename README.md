@@ -30,6 +30,10 @@ Its long-term direction includes real movie and television metadata, rich search
 - Graceful HTTP shutdown and MongoDB disconnect handling
 - Idempotent local seed-data bootstrap
 - Single-command local development for the database, API, and frontend
+- Owner-controlled profiles, privacy preferences and regional settings
+- Five-star audience ratings with aggregate distributions and programme-note review threads
+- Private watchlists, custom playlists, watched history and episode progress
+- USER, MODERATOR and ADMIN authorization with a dedicated moderation queue
 - Responsive React UI with loading and error states
 - TMDB-backed movie and television landing/detail experiences
 - Seasons, episodes, people profiles, trending people and date-aware Born Today

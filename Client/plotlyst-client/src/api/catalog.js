@@ -17,7 +17,10 @@ export const getPerson = (id) => axiosClient.get(`/api/catalog/people/${id}`);
 export const searchMulti = (query, page = 1, signal) => axiosClient.get('/api/discovery/search', { params: { q: query, page }, signal });
 export const getDiscoveryHome = (signal) => axiosClient.get('/api/discovery/home', { signal });
 export const getHomeSection = (section, signal) => axiosClient.get(`/api/discovery/home/${section}`, { signal });
-export const discover = (media, params, signal) => axiosClient.get(`/api/discovery/${media}`, { params, signal });
+export const discover = (media, params, signal) => {
+  const endpoint = media === 'movie' ? 'movies' : media;
+  return axiosClient.get(`/api/discovery/${endpoint}`, { params, signal });
+};
 export const getDiscoveryFilters = (media, signal) => axiosClient.get(`/api/discovery/filters/${media}`, { signal });
 export const getChart = (media, size, page = 1, signal) => axiosClient.get(`/api/discovery/charts/${media}/${size}`, { params: { page }, signal });
 export const getFranchise = (id, signal) => axiosClient.get(`/api/discovery/franchises/${id}`, { signal });

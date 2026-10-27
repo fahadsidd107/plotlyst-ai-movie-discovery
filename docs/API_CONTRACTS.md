@@ -1,5 +1,29 @@
 # Plotlyst API contracts
 
+## Community and personal library
+
+All `/api/me`, rating-write, review-write and moderation routes use the HTTP-only access cookie. Identity and ownership come from the validated server session, never from a user ID supplied in the body.
+
+| Method | Route | Purpose |
+|---|---|---|
+| `GET` | `/api/auth/session` | Hydrate the authoritative signed-in user |
+| `GET/PUT` | `/api/me/profile` | Read or update profile, avatar URL and preferences |
+| `GET` | `/api/profiles/:username` | Read a privacy-shaped public profile |
+| `GET` | `/api/community/:mediaType/:mediaId/ratings` | Rating average, count, distribution and viewer rating |
+| `PUT/DELETE` | `/api/community/:mediaType/:mediaId/rating` | Upsert or remove the caller's one-to-five-star rating |
+| `GET/POST` | `/api/community/:mediaType/:mediaId/reviews` | Read visible reviews or create a programme note |
+| `PATCH/DELETE` | `/api/reviews/:reviewId` | Owner-scoped review editing and soft deletion |
+| `POST` | `/api/reviews/:reviewId/replies` | Add a one-level reply |
+| `PUT/DELETE` | `/api/reviews/:reviewId/helpful` | Add or remove the caller's unique helpful vote |
+| `POST` | `/api/reviews/:reviewId/reports` | Privately report a review once |
+| `GET/PUT/DELETE` | `/api/me/watchlist[/:mediaType/:mediaId]` | Private watchlist operations |
+| `GET/POST/PATCH/DELETE` | `/api/me/playlists[...]` | Owner-scoped custom playlists and items |
+| `GET/PUT/DELETE` | `/api/me/history[...]` | Watched-history operations |
+| `GET/PUT` | `/api/me/tv/:showId/.../progress` | Show and episode progress |
+| `GET/PATCH` | `/api/moderation/...` | MODERATOR or ADMIN report review; suspension is ADMIN-only |
+
+Canonical media references use `media_type` (`movie` or `tv`) plus a positive TMDB `media_id`. User text is stored and rendered as plain text. Duplicate ratings, votes, reports and library entries are prevented by compound indexes.
+
 Step 1 preserves existing successful response bodies so the current React client remains compatible while standardizing every failure response.
 
 ## Base URL

@@ -31,7 +31,7 @@ const useAxiosPrivate = () => {
                 const status = error.response?.status;
 
                 if (!originalRequest) return Promise.reject(error);
-                if (originalRequest.url?.includes('/refresh') && status === 401) {
+                if (originalRequest.url?.includes('/api/auth/refresh') && status === 401) {
                     return Promise.reject(error);
                 }
 
@@ -46,12 +46,11 @@ const useAxiosPrivate = () => {
                     isRefreshing.current = true;
 
                     try {
-                        await axiosAuth.post('/refresh');
+                        await axiosAuth.post('/api/auth/refresh');
                         processQueue(null);
                         return axiosAuth(originalRequest);
                     } catch (refreshError) {
                         processQueue(refreshError);
-                        localStorage.removeItem('user');
                         setAuth(null);
                         return Promise.reject(refreshError);
                     } finally {

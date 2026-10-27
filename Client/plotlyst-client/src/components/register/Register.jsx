@@ -5,6 +5,7 @@ import Form from 'react-bootstrap/Form';
 import axiosClient from '../../api/axiosConfig';
 import { useNavigate, Link } from 'react-router-dom';
 import logo from '../../assets/PlotlystIcon.png';
+import { authApi } from '../../api/step4';
 
 const Register = () => {
     const [firstName, setFirstName] = useState('');
@@ -49,11 +50,7 @@ const Register = () => {
                 role: defaultRole,
                 favourite_genres: favouriteGenres
             };
-            const response = await axiosClient.post('/register', payload);
-            if (response.data.error) {
-                setError(response.data.error);
-                return;
-            }
+            await authApi.register(payload);
             // Registration successful, redirect to login
             navigate('/login', { replace: true });
         } catch {
