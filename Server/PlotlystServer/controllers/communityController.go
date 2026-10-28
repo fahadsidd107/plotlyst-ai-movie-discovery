@@ -66,7 +66,7 @@ func (cc *CommunityController) Session(c *gin.Context) {
 		apiresponse.Error(c, 401, "session_invalid", "The session user no longer exists")
 		return
 	}
-	c.JSON(200, models.UserResponse{UserId: user.UserID, FirstName: user.FirstName, LastName: user.LastName, Email: user.Email, Role: user.Role, FavouriteGenres: user.FavouriteGenres})
+	c.JSON(200, models.UserResponse{UserId: user.UserID, FirstName: user.FirstName, LastName: user.LastName, Email: user.Email, Role: user.Role, FavouriteGenres: user.FavouriteGenres, DateOfBirth: user.DateOfBirth, Gender: user.Gender, Avatar: user.Avatar})
 }
 
 func (cc *CommunityController) GetPublicProfile(c *gin.Context) {
@@ -88,10 +88,66 @@ func (cc *CommunityController) GetMyProfile(c *gin.Context) {
 	defer cancel()
 	var p models.Profile
 	if err := cc.collection("profiles").FindOne(ctx, bson.M{"user_id": uid}).Decode(&p); err != nil {
-		apiresponse.Error(c, 404, "profile_not_found", "Create your profile first")
-		return
+		var user models.User
+		if cc.collection("users").FindOne(ctx, bson.M{"user_id": uid}).Decode(&user) != nil {
+			apiresponse.Error(c, 404, "profile_not_found", "Profile not found")
+			return
+		}
+		base := strings.ToLower(strings.Map(func(r rune) rune {
+			if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
+				return r
+			}
+			return -1
+		}, user.FirstName+user.LastName))
+		p = models.Profile{UserID: uid, Username: base + uid[len(uid)-6:], DisplayName: user.FirstName + " " + user.LastName, AvatarURL: user.Avatar, Region: "DE", Locale: "en", Privacy: models.PrivacySettings{Profile: "PUBLIC", Library: "PRIVATE", Activity: "PRIVATE"}, FavouriteGenres: user.FavouriteGenres, CreatedAt: time.Now().UTC(), UpdatedAt: time.Now().UTC()}
+		_, _ = cc.collection("profiles").InsertOne(ctx, p)
 	}
 	c.JSON(200, gin.H{"data": p})
+}
+
+func (cc *CommunityController) DeleteAccount(c *gin.Context) {
+	uid, _ := utils.GetUserIdFromContext(c)
+	var body struct {
+		Confirmation string `json:"confirmation"`
+	}
+	if c.ShouldBindJSON(&body) != nil || body.Confirmation != "DELETE" {
+		apiresponse.Error(c, 400, "confirmation_required", "Type DELETE to confirm permanent account deletion")
+		return
+	}
+	ctx, cancel := requestContext(c)
+	defer cancel()
+	playlistCursor, _ := cc.collection("playlists").Find(ctx, bson.M{"owner_user_id": uid})
+	ids := []bson.ObjectID{}
+	if playlistCursor != nil {
+		var playlists []models.Playlist
+		playlistCursor.All(ctx, &playlists)
+		playlistCursor.Close(ctx)
+		for _, p := range playlists {
+			ids = append(ids, p.ID)
+		}
+	}
+	if len(ids) > 0 {
+		cc.collection("playlist_items").DeleteMany(ctx, bson.M{"playlist_id": bson.M{"$in": ids}})
+	}
+	for _, entry := range []struct {
+		name   string
+		filter bson.M
+	}{{"profiles", bson.M{"user_id": uid}}, {"ratings", bson.M{"user_id": uid}}, {"reviews", bson.M{"user_id": uid}}, {"review_votes", bson.M{"user_id": uid}}, {"review_reports", bson.M{"reporter_user_id": uid}}, {"watchlist_items", bson.M{"user_id": uid}}, {"watch_history", bson.M{"user_id": uid}}, {"episode_progress", bson.M{"user_id": uid}}, {"playlists", bson.M{"owner_user_id": uid}}} {
+		_, _ = cc.collection(entry.name).DeleteMany(ctx, entry.filter)
+	}
+	_, err := cc.collection("users").DeleteOne(ctx, bson.M{"user_id": uid})
+	if err != nil {
+		apiresponse.Error(c, 500, "database_error", "Unable to delete account")
+		return
+	}
+	clearSessionCookies(c)
+	c.Status(204)
+}
+
+func clearSessionCookies(c *gin.Context) {
+	for _, name := range []string{"access_token", "refresh_token"} {
+		c.SetCookie(name, "", -1, "/", "", false, true)
+	}
 }
 func (cc *CommunityController) UpsertMyProfile(c *gin.Context) {
 	uid, _ := utils.GetUserIdFromContext(c)

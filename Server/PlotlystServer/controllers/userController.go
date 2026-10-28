@@ -77,6 +77,14 @@ func RegisterUser(client *mongo.Client) gin.HandlerFunc {
 			apiresponse.Error(c, http.StatusInternalServerError, "database_error", "Unable to create the account")
 			return
 		}
+		usernameBase := strings.ToLower(strings.Map(func(r rune) rune {
+			if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
+				return r
+			}
+			return -1
+		}, user.FirstName+user.LastName))
+		profile := models.Profile{UserID: user.UserID, Username: usernameBase + user.UserID[len(user.UserID)-6:], DisplayName: user.FirstName + " " + user.LastName, AvatarURL: user.Avatar, Region: "DE", Locale: "en", Privacy: models.PrivacySettings{Profile: "PUBLIC", Library: "PRIVATE", Activity: "PRIVATE"}, FavouriteGenres: user.FavouriteGenres, CreatedAt: user.CreatedAt, UpdatedAt: user.UpdatedAt}
+		_, _ = database.OpenCollection("profiles", client).InsertOne(ctx, profile)
 
 		c.JSON(http.StatusCreated, result)
 
@@ -155,6 +163,9 @@ func LoginUser(client *mongo.Client) gin.HandlerFunc {
 			//Token:           token,
 			//RefreshToken:    refreshToken,
 			FavouriteGenres: foundUser.FavouriteGenres,
+			DateOfBirth:     foundUser.DateOfBirth,
+			Gender:          foundUser.Gender,
+			Avatar:          foundUser.Avatar,
 		})
 
 	}

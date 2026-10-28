@@ -22,6 +22,7 @@ func SetupCommunityRoutes(router *gin.Engine, client *mongo.Client) {
 	auth.GET("/me/profile", cc.GetMyProfile)
 	auth.PUT("/me/profile", cc.UpsertMyProfile)
 	auth.PUT("/me/settings", cc.UpsertMyProfile)
+	auth.DELETE("/me/account", cc.DeleteAccount)
 	auth.PUT("/community/:mediaType/:mediaId/rating", cc.PutRating)
 	auth.DELETE("/community/:mediaType/:mediaId/rating", cc.DeleteRating)
 	auth.POST("/community/:mediaType/:mediaId/reviews", middleware.RateLimit(8, time.Minute), cc.CreateReview)

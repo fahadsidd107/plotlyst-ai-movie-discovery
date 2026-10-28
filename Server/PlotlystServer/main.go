@@ -59,6 +59,7 @@ func main() {
 	routes.SetupUnProtectedRoutes(router, client)
 	tmdbClient := tmdb.New(cfg.TMDBBaseURL, cfg.TMDBAPIKey, cfg.TMDBTimeout, cfg.TMDBCacheTTL, cfg.TMDBMaxRetries)
 	routes.SetupCatalogRoutes(router, controllers.NewCatalogController(tmdbClient, cfg.TMDBImageBaseURL))
+	routes.SetupSpecialistRoutes(router, client, tmdbClient)
 	routes.SetupProtectedRoutes(router, client)
 	routes.SetupCommunityRoutes(router, client)
 

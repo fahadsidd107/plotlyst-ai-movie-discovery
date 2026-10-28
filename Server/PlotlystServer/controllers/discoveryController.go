@@ -232,6 +232,14 @@ func buildDiscoverQuery(c *gin.Context, media string) (url.Values, error) {
 	copyIf("runtime_min", "with_runtime.gte")
 	copyIf("runtime_max", "with_runtime.lte")
 	copyIf("provider", "with_watch_providers")
+	if monetization := c.Query("monetization"); monetization != "" {
+		allowed := map[string]string{"subscription": "flatrate", "rental": "rent", "purchase": "buy", "free": "free|ads"}
+		mapped, ok := allowed[monetization]
+		if !ok {
+			return nil, fmt.Errorf("monetization must be subscription, rental, purchase, or free")
+		}
+		q.Set("with_watch_monetization_types", mapped)
+	}
 	region := strings.ToUpper(c.DefaultQuery("region", "DE"))
 	if len(region) != 2 {
 		return nil, fmt.Errorf("region must be a two-letter country code")

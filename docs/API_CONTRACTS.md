@@ -24,6 +24,20 @@ All `/api/me`, rating-write, review-write and moderation routes use the HTTP-onl
 
 Canonical media references use `media_type` (`movie` or `tv`) plus a positive TMDB `media_id`. User text is stored and rendered as plain text. Duplicate ratings, votes, reports and library entries are prevented by compound indexes.
 
+## Specialist data
+
+| Method | Route | Purpose |
+|---|---|---|
+| `GET` | `/api/specialist/providers` | Provider configuration and license states |
+| `GET` | `/api/specialist/availability/:mediaType/:id?region=DE` | JustWatch-backed subscription, rental, purchase and free offers |
+| `GET` | `/api/specialist/awards/organizations` | Verified imported award organizations |
+| `GET` | `/api/specialist/awards/:organization/:year` | Categories, nominees and winners for a sourced ceremony |
+| `GET` | `/api/specialist/box-office?period=weekend&date=YYYY-MM-DD` | Latest licensed US snapshot not later than the requested date |
+| `GET` | `/api/specialist/editorial` | Imported classifications with record-level provenance |
+| `POST` | `/api/admin/imports/{awards,box-office,editorial}` | ADMIN-only verified import; supports `dry_run=true` |
+
+Specialist responses use `available`, `partial` or `unavailable` source status and never invent missing facts. Full policy: [`SPECIALIST_DATA_POLICY.md`](SPECIALIST_DATA_POLICY.md).
+
 Step 1 preserves existing successful response bodies so the current React client remains compatible while standardizing every failure response.
 
 ## Base URL

@@ -58,14 +58,16 @@ This plan translates the master product brief into manageable vertical slices. A
 
 ## Step 5 — Verified specialist data
 
-⬜ Define provider interfaces for awards, box office and streaming availability.  
-⬜ Implement regional streaming filters with subscription/rental/purchase distinctions.  
-⬜ Add awards organizations, ceremonies, categories, nominees and winners only from verified sources.  
-⬜ Add reporting-period-aware US box-office snapshots from a licensed source.  
-⬜ Build honest unavailable and partial-coverage states when a source is missing.  
-⬜ Add editorial imports for classifications not supplied by the main catalogue provider.
+✅ Define provider interfaces for awards, box office and streaming availability.
+✅ Implement regional streaming filters with subscription/rental/purchase distinctions.
+✅ Add awards organizations, ceremonies, categories, nominees and winners only from verified sources.
+✅ Add reporting-period-aware US box-office snapshots from a licensed source.
+✅ Build honest unavailable and partial-coverage states when a source is missing.
+✅ Add editorial imports for classifications not supplied by the main catalogue provider.
 
 **Outcome:** specialist pages backed by traceable data rather than invented values.
+
+**Coverage boundary:** availability is live TMDB/JustWatch data. Awards, box-office and editorial records require administrator imports with a source URL and license manifest. Until a licensed source is imported, these APIs deliberately return `unavailable`; they never manufacture records or represent missing revenue as zero. See [`SPECIALIST_DATA_POLICY.md`](SPECIALIST_DATA_POLICY.md).
 
 ## Step 6 — AI, analytics and live experiences
 

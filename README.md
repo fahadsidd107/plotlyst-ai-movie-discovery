@@ -34,6 +34,7 @@ Its long-term direction includes real movie and television metadata, rich search
 - Five-star audience ratings with aggregate distributions and programme-note review threads
 - Private watchlists, custom playlists, watched history and episode progress
 - USER, MODERATOR and ADMIN authorization with a dedicated moderation queue
+- Traceable specialist-data adapters for regional streaming, verified awards, licensed US box office and editorial classifications
 - Responsive React UI with loading and error states
 - TMDB-backed movie and television landing/detail experiences
 - Seasons, episodes, people profiles, trending people and date-aware Born Today

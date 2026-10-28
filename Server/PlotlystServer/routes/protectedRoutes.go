@@ -14,7 +14,8 @@ func SetupProtectedRoutes(router *gin.Engine, client *mongo.Client) {
 	protected.GET("/movie/:imdb_id", controller.GetMovie(client))
 	protected.POST("/addmovie", controller.AddMovie(client))
 	protected.GET("/recommendedmovies", controller.GetRecommendedMovies(client))
-	protected.PATCH("/updatereview/:imdb_id", controller.AdminReviewUpdate(client))
+	protected.PATCH("/updatereview/:imdb_id", middleware.RequireActiveUser(client), middleware.RequireRoles("ADMIN"), controller.AdminReviewUpdate(client))
 	protected.POST("/logout", controller.LogoutHandler(client))
 	protected.POST("/api/auth/logout", controller.LogoutHandler(client))
+	protected.POST("/api/auth/logout-all", controller.LogoutHandler(client))
 }

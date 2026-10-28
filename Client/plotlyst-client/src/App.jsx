@@ -27,6 +27,7 @@ import RoleGuard from './components/RoleGuard';
 import { LibraryDashboard, WatchlistPage, HistoryPage, PlaylistPage } from './components/library/LibraryPages';
 import { PublicProfile, ProfileSettings, PrivacySettings, PreferenceSettings } from './components/profile/ProfilePages';
 import Moderation from './components/moderation/Moderation';
+import { SpecialistIndex, Awards, AwardCeremony, BoxOffice, Streaming, Editorial } from './components/specialist/SpecialistPages';
 
 import {Route, Routes, useNavigate} from 'react-router-dom'
 
@@ -76,6 +77,12 @@ function App() {
           <Route path="/charts" element={<ChartsIndex/>}></Route>
           <Route path="/charts/:media/:size" element={<ChartPage/>}></Route>
           <Route path="/collections" element={<Collections/>}></Route>
+          <Route path="/specialist" element={<SpecialistIndex/>}></Route>
+          <Route path="/awards" element={<Awards/>}></Route>
+          <Route path="/awards/:organization/:year" element={<AwardCeremony/>}></Route>
+          <Route path="/box-office" element={<BoxOffice/>}></Route>
+          <Route path="/streaming" element={<Streaming/>}></Route>
+          <Route path="/editorial" element={<Editorial/>}></Route>
           <Route path="/franchise/:id" element={<Franchise/>}></Route>
           <Route path="/movies" element={<CatalogLanding kind="movie" eyebrow="The big-screen signal" title="Movies worth leaving the group chat for." copy="Fresh phenomena, modern classics and glorious oddities—programmed like the film festival in your head." loader={getMovies}/>}></Route>
           <Route path="/movie/:id" element={<DetailPage type="movie" loader={getMovie}/>}></Route>
@@ -89,6 +96,7 @@ function App() {
           <Route path="/register" element={<Register/>}></Route>
           <Route path="/login" element={<Login/>}></Route>
           <Route element = {<RequiredAuth/>}>
+              <Route path="/profile" element={<ProfileSettings/>}></Route>
               <Route path="/recommended" element={<Recommended/>}></Route>
               <Route path="/review/:imdb_id" element={<Review/>}></Route>
               <Route path="/library" element={<LibraryDashboard/>}></Route>
@@ -107,6 +115,8 @@ function App() {
           <strong>Plotlyst</strong>
           <span className="site-footer__tagline">Thoughtful movie discovery, shaped around your taste.</span>
           <nav className="site-footer__contacts" aria-label="Creator contact links">
+            <a href="/specialist">Specialist data</a>
+            <a href="/streaming">Where to watch</a>
             <a href="mailto:siddiqui107@gmail.com">siddiqui107@gmail.com</a>
             <a href="tel:+4917623876395">+49 176 238 76 395</a>
             <a href="https://www.linkedin.com/in/muhammad-fahad-siddiqui-595484176/" target="_blank" rel="noreferrer">LinkedIn</a>

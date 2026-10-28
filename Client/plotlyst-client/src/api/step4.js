@@ -18,6 +18,7 @@ export const profileApi = {
   update: payload => request('put', '/api/me/profile', payload),
   settings: () => request('get', '/api/me/profile'),
   updateSettings: payload => request('put', '/api/me/settings', payload),
+  deleteAccount: confirmation => request('delete', '/api/me/account', { confirmation }),
 };
 
 export const communityApi = {

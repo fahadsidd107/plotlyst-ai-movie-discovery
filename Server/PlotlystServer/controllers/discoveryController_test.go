@@ -50,3 +50,15 @@ func TestWeightedScoreRewardsConfidence(t *testing.T) {
 		t.Fatalf("popular score %f should exceed obscure score %f", popular, obscure)
 	}
 }
+
+func TestDiscoverMonetizationMapping(t *testing.T) {
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	c.Request = httptest.NewRequest("GET", "/?monetization=subscription", nil)
+	q, err := buildDiscoverQuery(c, "movie")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := q.Get("with_watch_monetization_types"); got != "flatrate" {
+		t.Fatalf("got %q", got)
+	}
+}

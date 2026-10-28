@@ -6,6 +6,25 @@ import axiosClient from '../../api/axiosConfig';
 import { useNavigate, Link } from 'react-router-dom';
 import logo from '../../assets/PlotlystIcon.png';
 import { authApi } from '../../api/step4';
+import avatarSheet from '../../assets/avatars/plotlyst-avatar-sheet.png';
+
+const avatars = [
+    { id: 'avatar-01', gender: 'female' }, { id: 'avatar-02', gender: 'male' },
+    { id: 'avatar-03', gender: 'female' }, { id: 'avatar-04', gender: 'male' },
+    { id: 'avatar-05', gender: 'male' }, { id: 'avatar-06', gender: 'female' },
+    { id: 'avatar-07', gender: 'male' }, { id: 'avatar-08', gender: 'female' },
+    { id: 'avatar-09', gender: 'female' }, { id: 'avatar-10', gender: 'male' },
+    { id: 'avatar-11', gender: 'female' }, { id: 'avatar-12', gender: 'male' },
+];
+
+const AvatarPortrait = ({ avatar, selected = false }) => {
+    const index = Number(avatar.id.slice(-2)) - 1;
+    const col = index % 4;
+    const row = Math.floor(index / 4);
+    return <span className={`avatar-portrait${selected ? ' is-selected' : ''}`} aria-hidden="true">
+        <img src={avatarSheet} alt="" style={{ '--avatar-x': `${col * 100}%`, '--avatar-y': `${row * 100}%` }} />
+    </span>;
+};
 
 const Register = () => {
     const [firstName, setFirstName] = useState('');
@@ -13,6 +32,9 @@ const Register = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [dateOfBirth, setDateOfBirth] = useState('');
+    const [gender, setGender] = useState('');
+    const [avatar, setAvatar] = useState('');
     const [favouriteGenres, setFavouriteGenres] = useState([]);
     const [genres, setGenres] = useState([]);
 
@@ -30,10 +52,6 @@ const Register = () => {
    const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
-        const defaultRole ="USER";
-
-        console.log(defaultRole);
-
         if (password !== confirmPassword) {
             setError('Passwords do not match.');
             return;
@@ -47,7 +65,9 @@ const Register = () => {
                 last_name: lastName,
                 email,
                 password,
-                role: defaultRole,
+                date_of_birth: dateOfBirth,
+                gender,
+                avatar,
                 favourite_genres: favouriteGenres
             };
             await authApi.register(payload);
@@ -88,7 +108,7 @@ const Register = () => {
                     {error && <div className="form-error" role="alert">{error}</div>}
                 </div>
              <Form onSubmit={handleSubmit} className="register-grid">
-                     <Form.Group className="mb-3">
+                    <Form.Group className="mb-3">
                         <Form.Label>First Name</Form.Label>
                         <Form.Control
                             type="text"
@@ -98,6 +118,27 @@ const Register = () => {
                             required
                         />
                     </Form.Group>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Date of birth</Form.Label>
+                        <Form.Control type="date" value={dateOfBirth} max={new Date().toISOString().slice(0, 10)} onChange={e => setDateOfBirth(e.target.value)} required />
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Gender</Form.Label>
+                        <Form.Select value={gender} onChange={e => { setGender(e.target.value); setAvatar(''); }} required>
+                            <option value="">Choose an option</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="diverse">Diverse</option>
+                        </Form.Select>
+                    </Form.Group>
+                    {gender && <fieldset className="avatar-picker register-grid__full mb-3">
+                        <legend>Choose your Plotlyst avatar</legend>
+                        <p>Original AI-created portraits representing different ages, races, styles and body types.</p>
+                        <div className="avatar-picker__grid">
+                            {avatars.filter(item => gender === 'diverse' || item.gender === gender).map(item => <button type="button" key={item.id} className={avatar === item.id ? 'selected' : ''} aria-pressed={avatar === item.id} aria-label={`Choose avatar ${item.id.slice(-2)}`} onClick={() => setAvatar(item.id)}><AvatarPortrait avatar={item} selected={avatar === item.id} /></button>)}
+                        </div>
+                        {!avatar && <small>Please choose one avatar to continue.</small>}
+                    </fieldset>}
                      <Form.Group className="mb-3">
                         <Form.Label>Last Name</Form.Label>
                         <Form.Control
@@ -164,7 +205,7 @@ const Register = () => {
                         variant="primary"
                         type="submit"
                         className="button button--primary w-100 register-grid__full"
-                        disabled={loading}
+                        disabled={loading || !avatar}
                         style={{fontWeight: 600, letterSpacing: 1}}
                     >
                         {loading ? (

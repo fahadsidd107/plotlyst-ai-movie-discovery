@@ -19,6 +19,9 @@ type User struct {
 	Token           string        `json:"token" bson:"token"`
 	RefreshToken    string        `json:"refresh_token" bson:"refresh_token"`
 	FavouriteGenres []Genre       `json:"favourite_genres" bson:"favourite_genres" validate:"required,dive"`
+	DateOfBirth     string        `json:"date_of_birth" bson:"date_of_birth" validate:"required,datetime=2006-01-02"`
+	Gender          string        `json:"gender" bson:"gender" validate:"required,oneof=male female diverse"`
+	Avatar          string        `json:"avatar" bson:"avatar" validate:"required,startswith=avatar-"`
 }
 type UserLogin struct {
 	Email    string `json:"email" validate:"required,email"`
@@ -33,4 +36,7 @@ type UserResponse struct {
 	Token           string  `json:"token"`
 	RefreshToken    string  `json:"refresh_token"`
 	FavouriteGenres []Genre `json:"favourite_genres"`
+	DateOfBirth     string  `json:"date_of_birth"`
+	Gender          string  `json:"gender"`
+	Avatar          string  `json:"avatar"`
 }
