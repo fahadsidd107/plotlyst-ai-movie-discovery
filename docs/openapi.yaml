@@ -1,0 +1,180 @@
+openapi: 3.1.0
+info:
+  title: Plotlyst API
+  version: 1.0.0
+  description: >-
+    Contract for the Plotlyst catalogue, discovery, community, specialist-data,
+    AI discovery, analytics and collaborative Movie Night API.
+servers:
+  - url: http://localhost:8080
+    description: Local development
+tags:
+  - name: Operations
+  - name: Catalogue
+  - name: Discovery
+  - name: Community
+  - name: Intelligence
+  - name: Story DNA
+  - name: Specialist
+paths:
+  /health/live:
+    get:
+      tags: [Operations]
+      operationId: liveness
+      responses:
+        '200': {description: Process is alive, content: {application/json: {schema: {$ref: '#/components/schemas/Health'}}}}
+  /health/ready:
+    get:
+      tags: [Operations]
+      operationId: readiness
+      responses:
+        '200': {description: Database is reachable}
+        '503': {$ref: '#/components/responses/Error'}
+  /metrics:
+    get:
+      tags: [Operations]
+      operationId: metrics
+      responses:
+        '200': {description: Prometheus text exposition}
+  /api/catalog/movies:
+    get:
+      tags: [Catalogue]
+      operationId: listMovies
+      parameters:
+        - {$ref: '#/components/parameters/Page'}
+      responses:
+        '200': {description: Movie page, content: {application/json: {schema: {$ref: '#/components/schemas/CatalogueEnvelope'}}}}
+        '502': {$ref: '#/components/responses/Error'}
+  /api/catalog/movies/{id}:
+    get:
+      tags: [Catalogue]
+      operationId: movieDetail
+      parameters: [{$ref: '#/components/parameters/CatalogueID'}]
+      responses:
+        '200': {description: Movie detail}
+        '404': {$ref: '#/components/responses/Error'}
+  /api/catalog/tv:
+    get:
+      tags: [Catalogue]
+      operationId: listTelevision
+      responses: {'200': {description: Television page}}
+  /api/catalog/tv/{id}:
+    get:
+      tags: [Catalogue]
+      operationId: televisionDetail
+      parameters: [{$ref: '#/components/parameters/CatalogueID'}]
+      responses: {'200': {description: Television detail}}
+  /api/discovery/search:
+    get:
+      tags: [Discovery]
+      operationId: globalSearch
+      parameters:
+        - {name: q, in: query, required: true, schema: {type: string, minLength: 2, maxLength: 200}}
+        - {$ref: '#/components/parameters/Page'}
+      responses: {'200': {description: Mixed search result page}, '400': {$ref: '#/components/responses/Error'}}
+  /api/discovery/movies:
+    get:
+      tags: [Discovery]
+      operationId: discoverMovies
+      responses: {'200': {description: Filtered movie page}}
+  /api/discovery/tv:
+    get:
+      tags: [Discovery]
+      operationId: discoverTelevision
+      responses: {'200': {description: Filtered television page}}
+  /api/me/profile:
+    get:
+      security: [{cookieAuth: []}]
+      tags: [Community]
+      operationId: myProfile
+      responses: {'200': {description: Current profile}, '401': {$ref: '#/components/responses/Error'}}
+    put:
+      security: [{cookieAuth: []}]
+      tags: [Community]
+      operationId: updateMyProfile
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/ProfilePatch'}}}}
+      responses: {'200': {description: Updated profile}, '400': {$ref: '#/components/responses/Error'}}
+  /api/ai/discover:
+    post:
+      security: [{cookieAuth: []}]
+      tags: [Intelligence]
+      operationId: naturalLanguageDiscovery
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/DiscoveryPrompt'}}}}
+      responses: {'200': {description: Validated intent and ranked catalogue results, content: {application/json: {schema: {$ref: '#/components/schemas/IntelligenceEnvelope'}}}}, '429': {$ref: '#/components/responses/Error'}}
+  /api/ai/memory-search:
+    post:
+      security: [{cookieAuth: []}]
+      tags: [Intelligence]
+      operationId: movieMemorySearch
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/DiscoveryPrompt'}}}}
+      responses: {'200': {description: Ranked memory matches}}
+  /api/analytics/cinema-dna:
+    get:
+      security: [{cookieAuth: []}]
+      tags: [Intelligence]
+      operationId: cinemaDNA
+      responses: {'200': {description: Private activity aggregation with coverage}}
+  /api/story-dna/movies/{id}:
+    get:
+      tags: [Story DNA]
+      operationId: movieStoryDNA
+      parameters:
+        - {$ref: '#/components/parameters/CatalogueID'}
+        - {name: include_spoilers, in: query, schema: {type: boolean, default: false}}
+      responses:
+        '200': {description: Validated and provenance-labelled narrative profile, content: {application/json: {schema: {$ref: '#/components/schemas/StoryDNAEnvelope'}}}}
+        '404': {$ref: '#/components/responses/Error'}
+  /api/story-dna/discover:
+    post:
+      tags: [Story DNA]
+      operationId: discoverByStoryDNA
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/StoryDNADiscovery'}}}}
+      responses:
+        '200': {description: Weighted and explainable narrative matches}
+        '400': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
+  /api/movie-night/rooms:
+    post:
+      security: [{cookieAuth: []}]
+      tags: [Intelligence]
+      operationId: createMovieNight
+      responses: {'201': {description: Persistent room and join code}}
+  /api/movie-night/rooms/{code}:
+    get:
+      security: [{cookieAuth: []}]
+      tags: [Intelligence]
+      operationId: movieNight
+      parameters: [{$ref: '#/components/parameters/RoomCode'}]
+      responses: {'200': {description: Room and deterministic intersection}, '404': {$ref: '#/components/responses/Error'}}
+  /api/specialist/box-office:
+    get:
+      tags: [Specialist]
+      operationId: boxOffice
+      parameters:
+        - {name: period, in: query, schema: {type: string, enum: [daily, weekend, weekly], default: weekend}}
+        - {name: date, in: query, schema: {type: string, format: date}}
+      responses: {'200': {description: Licensed snapshot, explicit demo fixture, or honest unavailable state}, '502': {$ref: '#/components/responses/Error'}}
+components:
+  securitySchemes:
+    cookieAuth: {type: apiKey, in: cookie, name: access_token}
+  parameters:
+    Page: {name: page, in: query, schema: {type: integer, minimum: 1, maximum: 500, default: 1}}
+    CatalogueID: {name: id, in: path, required: true, schema: {type: integer, minimum: 1}}
+    RoomCode: {name: code, in: path, required: true, schema: {type: string, pattern: '^[A-F0-9]{6}$'}}
+  responses:
+    Error:
+      description: Structured API error
+      content: {application/json: {schema: {$ref: '#/components/schemas/ErrorEnvelope'}}}
+  schemas:
+    Health: {type: object, required: [status, service], properties: {status: {type: string}, service: {type: string}}}
+    ErrorEnvelope: {type: object, required: [error], properties: {error: {$ref: '#/components/schemas/APIError'}}}
+    APIError: {type: object, required: [code, message], properties: {code: {type: string}, message: {type: string}, request_id: {type: string}}}
+    CatalogueEnvelope: {type: object, required: [data, meta], properties: {data: {type: object}, meta: {$ref: '#/components/schemas/SourceMeta'}}}
+    SourceMeta: {type: object, properties: {source: {type: string}, attribution: {type: string}, image_base_url: {type: string, format: uri}}}
+    ProfilePatch: {type: object, properties: {display_name: {type: string, maxLength: 80}, bio: {type: string, maxLength: 500}, region: {type: string, minLength: 2, maxLength: 2}, locale: {type: string}, timezone: {type: string}}}
+    DiscoveryPrompt: {type: object, required: [query], properties: {query: {type: string, minLength: 1, maxLength: 800}, region: {type: string, minLength: 2, maxLength: 2}, consent_to_personalization: {type: boolean, default: false}}}
+    IntelligenceEnvelope: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/IntelligenceResponse'}}}
+    IntelligenceResponse: {type: object, required: [intent, items, provenance, usage, limitations], properties: {intent: {type: object}, items: {type: array, maxItems: 20, items: {type: object}}, provenance: {type: object}, usage: {type: object}, limitations: {type: array, items: {type: string}}}}
+    StoryDNAEnvelope: {type: object, required: [data, source], properties: {data: {$ref: '#/components/schemas/StoryDNAProfile'}, source: {type: object}}}
+    StoryDNAProfile: {type: object, required: [movie_id, title, structures, styles, tones, scores, provenance], properties: {movie_id: {type: integer}, title: {type: string}, poster_path: {type: string}, release_year: {type: integer}, structures: {type: array, items: {type: string}}, styles: {type: array, items: {type: string}}, tones: {type: array, items: {type: string}}, scores: {type: object, additionalProperties: {type: integer, minimum: 0, maximum: 100}}, spoiler_traits: {type: object}, provenance: {type: object}}}
+    StoryDNADiscovery: {type: object, properties: {query: {type: string, maxLength: 800}, seed_movie_id: {type: integer, minimum: 1}, include_spoilers: {type: boolean, default: false}, weights: {type: object, properties: {mood: {type: number, minimum: 0}, pacing: {type: number, minimum: 0}, complexity: {type: number, minimum: 0}, structure: {type: number, minimum: 0}}}}}

@@ -16,6 +16,7 @@ import (
 	"plotlyst/server/config"
 	"plotlyst/server/controllers"
 	"plotlyst/server/database"
+	"plotlyst/server/middleware"
 	"plotlyst/server/routes"
 	"plotlyst/server/tmdb"
 )
@@ -40,7 +41,8 @@ func main() {
 	cancelIndexes()
 
 	router := gin.New()
-	router.Use(gin.Logger(), gin.Recovery())
+	metrics := middleware.NewMetrics()
+	router.Use(gin.Recovery(), middleware.RequestID(), middleware.SecurityHeaders(), metrics.Middleware())
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     cfg.AllowedOrigins,
 		AllowMethods:     []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"},
@@ -53,13 +55,16 @@ func main() {
 	router.GET("/hello", func(c *gin.Context) { c.String(http.StatusOK, "Hello, Plotlyst!") })
 	router.GET("/health/live", controllers.Liveness)
 	router.GET("/health/ready", controllers.Readiness(client))
+	router.GET("/metrics", metrics.Handler)
 	router.NoRoute(func(c *gin.Context) {
 		apiresponse.Error(c, http.StatusNotFound, "route_not_found", "The requested API route does not exist")
 	})
 	routes.SetupUnProtectedRoutes(router, client)
 	tmdbClient := tmdb.New(cfg.TMDBBaseURL, cfg.TMDBAPIKey, cfg.TMDBTimeout, cfg.TMDBCacheTTL, cfg.TMDBMaxRetries)
 	routes.SetupCatalogRoutes(router, controllers.NewCatalogController(tmdbClient, cfg.TMDBImageBaseURL))
-	routes.SetupSpecialistRoutes(router, client, tmdbClient)
+	routes.SetupSpecialistRoutes(router, client, tmdbClient, cfg)
+	routes.SetupIntelligenceRoutes(router, client, tmdbClient, cfg)
+	routes.SetupStoryDNARoutes(router, client, tmdbClient)
 	routes.SetupProtectedRoutes(router, client)
 	routes.SetupCommunityRoutes(router, client)
 

@@ -1,0 +1,29 @@
+services:
+  mongo:
+    image: mongo:8
+    restart: unless-stopped
+    volumes: [plotlyst-mongo:/data/db]
+    healthcheck:
+      test: [CMD, mongosh, --quiet, --eval, "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  api:
+    build: ./Server/PlotlystServer
+    restart: unless-stopped
+    env_file: ./Server/PlotlystServer/.env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      ALLOWED_ORIGINS: http://localhost:5173
+    ports: ["8080:8080"]
+    depends_on:
+      mongo: {condition: service_healthy}
+  client:
+    build:
+      context: ./Client/plotlyst-client
+      args: {VITE_API_BASE_URL: http://localhost:8080}
+    restart: unless-stopped
+    ports: ["5173:80"]
+    depends_on: [api]
+volumes:
+  plotlyst-mongo:

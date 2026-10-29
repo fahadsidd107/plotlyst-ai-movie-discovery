@@ -28,7 +28,7 @@ const AmbientStage = () => {
         vx: (Math.random() - 0.5) * 0.18,
         vy: (Math.random() - 0.5) * 0.18,
         radius: Math.random() * 1.4 + 0.5,
-        color: ['#a977ff', '#ff657a', '#6fe7da'][Math.floor(Math.random() * 3)],
+        color: ['#ffbd66', '#f7ead3', '#d49b50'][Math.floor(Math.random() * 3)],
       }));
     };
 
@@ -73,8 +73,8 @@ const AmbientStage = () => {
         ripple.radius += reducedMotion ? 10 : 2.8;
         ripple.alpha -= reducedMotion ? 0.12 : 0.012;
         context.globalAlpha = Math.max(ripple.alpha, 0);
-        context.strokeStyle = '#a977ff';
-        context.lineWidth = 1.5;
+        context.strokeStyle = '#ffbd66';
+        context.lineWidth = 1;
         context.beginPath();
         context.arc(ripple.x, ripple.y, ripple.radius, 0, Math.PI * 2);
         context.stroke();

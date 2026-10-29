@@ -132,7 +132,7 @@ func (cc *CommunityController) DeleteAccount(c *gin.Context) {
 	for _, entry := range []struct {
 		name   string
 		filter bson.M
-	}{{"profiles", bson.M{"user_id": uid}}, {"ratings", bson.M{"user_id": uid}}, {"reviews", bson.M{"user_id": uid}}, {"review_votes", bson.M{"user_id": uid}}, {"review_reports", bson.M{"reporter_user_id": uid}}, {"watchlist_items", bson.M{"user_id": uid}}, {"watch_history", bson.M{"user_id": uid}}, {"episode_progress", bson.M{"user_id": uid}}, {"playlists", bson.M{"owner_user_id": uid}}} {
+	}{{"profiles", bson.M{"user_id": uid}}, {"ratings", bson.M{"user_id": uid}}, {"reviews", bson.M{"user_id": uid}}, {"review_votes", bson.M{"user_id": uid}}, {"review_reports", bson.M{"reporter_user_id": uid}}, {"watchlist_items", bson.M{"user_id": uid}}, {"watch_history", bson.M{"user_id": uid}}, {"episode_progress", bson.M{"user_id": uid}}, {"playlists", bson.M{"owner_user_id": uid}}, {"ai_privacy", bson.M{"user_id": uid}}, {"movie_nights", bson.M{"owner_id": uid}}} {
 		_, _ = cc.collection(entry.name).DeleteMany(ctx, entry.filter)
 	}
 	_, err := cc.collection("users").DeleteOne(ctx, bson.M{"user_id": uid})
@@ -146,7 +146,7 @@ func (cc *CommunityController) DeleteAccount(c *gin.Context) {
 
 func clearSessionCookies(c *gin.Context) {
 	for _, name := range []string{"access_token", "refresh_token"} {
-		c.SetCookie(name, "", -1, "/", "", false, true)
+		utils.SetSessionCookie(c.Writer, name, "", -1)
 	}
 }
 func (cc *CommunityController) UpsertMyProfile(c *gin.Context) {

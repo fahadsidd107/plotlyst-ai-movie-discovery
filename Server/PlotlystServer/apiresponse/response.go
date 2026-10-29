@@ -7,13 +7,14 @@ type ErrorBody struct {
 }
 
 type APIError struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
-	Details any    `json:"details,omitempty"`
+	Code      string `json:"code"`
+	Message   string `json:"message"`
+	Details   any    `json:"details,omitempty"`
+	RequestID string `json:"request_id,omitempty"`
 }
 
 func Error(c *gin.Context, status int, code, message string, details ...any) {
-	body := ErrorBody{Error: APIError{Code: code, Message: message}}
+	body := ErrorBody{Error: APIError{Code: code, Message: message, RequestID: c.GetString("requestId")}}
 	if len(details) > 0 {
 		body.Error.Details = details[0]
 	}

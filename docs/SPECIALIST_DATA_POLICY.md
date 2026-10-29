@@ -1,5 +1,11 @@
 # Specialist data policy
 
+## Development box-office fallback
+
+When `OPUSDATA_API_KEY` and `OPUSDATA_BASE_URL` are configured together, Plotlyst uses the licensed OpusData adapter. If that configured upstream fails, the API returns an upstream error and does not silently substitute demo values.
+
+When no licensed provider is configured and `BOX_OFFICE_DEMO_ENABLED=true`, the API serves a bundled synthetic snapshot with `demo: true`, source status `demo`, and the license warning `DEMO DATA — NOT VERIFIED OR FOR REPORTING`. These titles and numbers are UI-development fixtures, not known box-office facts. Set the flag to `false` to show the honest unavailable state instead.
+
 Plotlyst never substitutes generated values for awards, box-office totals, streaming availability or editorial classifications.
 
 ## Providers

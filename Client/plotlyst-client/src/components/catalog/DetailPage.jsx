@@ -5,6 +5,7 @@ import CatalogCard from './CatalogCard';
 import LoadingScreen from '../ui/LoadingScreen';
 import { ErrorState } from '../ui/States';
 import CommunityPanel from '../community/CommunityPanel';
+import StoryDnaPanel from '../storyDna/StoryDnaPanel';
 
 const DetailPage = ({ type, loader }) => {
   const { id } = useParams();
@@ -35,6 +36,7 @@ const DetailPage = ({ type, loader }) => {
       </div>
     </header>
     <div className="page-shell detail-flow">
+      {type === 'movie' && <StoryDnaPanel movieId={id} title={title} />}
       {item.belongs_to_collection && <section className="editorial-band"><p className="eyebrow">Part of a bigger story</p><h2>{item.belongs_to_collection.name}</h2></section>}
       {type === 'tv' && item.seasons?.length > 0 && <section><div className="section-heading"><div><p className="eyebrow">Episode guide</p><h2>Seasons</h2></div></div><div className="season-rail">{item.seasons.filter(s => s.season_number > 0).map(s => <Link key={s.id} to={`/tv/${id}/seasons/${s.season_number}`}><b>{String(s.season_number).padStart(2, '0')}</b><span>{s.name}</span><small>{s.episode_count} episodes</small></Link>)}</div></section>}
       {(regionalRelease || contentRating) && <section className="release-panel"><div><p className="eyebrow">Regional information</p><h2>{type === 'movie' ? 'Release & certification' : 'Content rating'}</h2></div><dl>

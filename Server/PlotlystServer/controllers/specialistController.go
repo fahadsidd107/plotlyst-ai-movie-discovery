@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -21,10 +22,11 @@ import (
 type SpecialistController struct {
 	client       *mongo.Client
 	availability specialist.AvailabilityProvider
+	boxOffice    specialist.BoxOfficeProvider
 }
 
-func NewSpecialistController(client *mongo.Client, availability specialist.AvailabilityProvider) *SpecialistController {
-	return &SpecialistController{client: client, availability: availability}
+func NewSpecialistController(client *mongo.Client, availability specialist.AvailabilityProvider, boxOffice specialist.BoxOfficeProvider) *SpecialistController {
+	return &SpecialistController{client: client, availability: availability, boxOffice: boxOffice}
 }
 func (s *SpecialistController) col(name string) *mongo.Collection {
 	return database.OpenCollection(name, s.client)
@@ -37,7 +39,7 @@ func (s *SpecialistController) Providers(c *gin.Context) {
 	c.JSON(200, gin.H{"data": []gin.H{
 		{"kind": "availability", "provider": "TMDB / JustWatch", "status": "available", "license": "TMDB API terms; JustWatch attribution required"},
 		{"kind": "awards", "provider": "Verified admin imports", "status": "partial", "license": "Per-import source manifest"},
-		{"kind": "box_office", "provider": "Licensed admin imports", "status": "partial", "license": "Per-import source manifest"},
+		{"kind": "box_office", "provider": "OpusData when configured; explicit Plotlyst demo otherwise", "status": "partial", "license": "Licensed OpusData or visibly synthetic demo"},
 		{"kind": "editorial", "provider": "Editorial source manifests", "status": "partial", "license": "Per-import source manifest"},
 	}})
 }
@@ -106,8 +108,21 @@ func (s *SpecialistController) BoxOffice(c *gin.Context) {
 	defer cancel()
 	var row specialist.BoxOfficeSnapshot
 	err := s.col("box_office_snapshots").FindOne(ctx, bson.M{"period": period, "period_end": bson.M{"$lte": asOf}}, options.FindOne().SetSort(bson.D{{Key: "period_end", Value: -1}})).Decode(&row)
+	if err == nil {
+		c.JSON(200, gin.H{"data": row, "source": row.Source})
+		return
+	}
+	if s.boxOffice == nil {
+		c.JSON(200, gin.H{"data": nil, "source": unavailable("Box-office provider", "No licensed source or demo fixture is configured.")})
+		return
+	}
+	row, err = s.boxOffice.USSnapshot(ctx, period, asOf)
+	if errors.Is(err, specialist.ErrNotConfigured) || errors.Is(err, specialist.ErrNoCoverage) {
+		c.JSON(200, gin.H{"data": nil, "source": unavailable("Box-office provider", "No coverage is available for this reporting period.")})
+		return
+	}
 	if err != nil {
-		c.JSON(200, gin.H{"data": nil, "source": unavailable("Licensed box-office import", "No licensed US box-office snapshot is configured for this reporting period.")})
+		apiresponse.Error(c, 502, "box_office_upstream_error", "The configured box-office provider is temporarily unavailable")
 		return
 	}
 	c.JSON(200, gin.H{"data": row, "source": row.Source})

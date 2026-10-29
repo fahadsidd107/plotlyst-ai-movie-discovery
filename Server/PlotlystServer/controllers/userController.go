@@ -133,26 +133,8 @@ func LoginUser(client *mongo.Client) gin.HandlerFunc {
 			apiresponse.Error(c, http.StatusInternalServerError, "database_error", "Unable to persist the session")
 			return
 		}
-		http.SetCookie(c.Writer, &http.Cookie{
-			Name:  "access_token",
-			Value: token,
-			Path:  "/",
-			// Domain:   "localhost",
-			MaxAge:   86400,
-			Secure:   false,
-			HttpOnly: true,
-			SameSite: http.SameSiteLaxMode,
-		})
-		http.SetCookie(c.Writer, &http.Cookie{
-			Name:  "refresh_token",
-			Value: refreshToken,
-			Path:  "/",
-			// Domain:   "localhost",
-			MaxAge:   604800,
-			Secure:   false,
-			HttpOnly: true,
-			SameSite: http.SameSiteLaxMode,
-		})
+		utils.SetSessionCookie(c.Writer, "access_token", token, 86400)
+		utils.SetSessionCookie(c.Writer, "refresh_token", refreshToken, 604800)
 
 		c.JSON(http.StatusOK, models.UserResponse{
 			UserId:    foundUser.UserID,
@@ -196,16 +178,7 @@ func LogoutHandler(client *mongo.Client) gin.HandlerFunc {
 		// 	true,        // Use true in production with HTTPS
 		// 	true,        // HttpOnly
 		// )
-		http.SetCookie(c.Writer, &http.Cookie{
-			Name:  "access_token",
-			Value: "",
-			Path:  "/",
-			// Domain:   "localhost",
-			MaxAge:   -1,
-			Secure:   false,
-			HttpOnly: true,
-			SameSite: http.SameSiteLaxMode,
-		})
+		utils.SetSessionCookie(c.Writer, "access_token", "", -1)
 
 		// // Clear the refresh_token cookie
 		// c.SetCookie(
@@ -217,15 +190,7 @@ func LogoutHandler(client *mongo.Client) gin.HandlerFunc {
 		// 	true,
 		// 	true,
 		// )
-		http.SetCookie(c.Writer, &http.Cookie{
-			Name:     "refresh_token",
-			Value:    "",
-			Path:     "/",
-			MaxAge:   -1,
-			Secure:   false,
-			HttpOnly: true,
-			SameSite: http.SameSiteLaxMode,
-		})
+		utils.SetSessionCookie(c.Writer, "refresh_token", "", -1)
 
 		c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 	}
@@ -266,9 +231,8 @@ func RefreshTokenHandler(client *mongo.Client) gin.HandlerFunc {
 			return
 		}
 
-		c.SetSameSite(http.SameSiteLaxMode)
-		c.SetCookie("access_token", newToken, 86400, "/", "", false, true)          // expires in 24 hours
-		c.SetCookie("refresh_token", newRefreshToken, 604800, "/", "", false, true) //expires in 1 week
+		utils.SetSessionCookie(c.Writer, "access_token", newToken, 86400)
+		utils.SetSessionCookie(c.Writer, "refresh_token", newRefreshToken, 604800)
 
 		c.JSON(http.StatusOK, gin.H{"message": "Tokens refreshed"})
 	}

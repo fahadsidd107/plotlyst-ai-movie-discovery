@@ -36,3 +36,18 @@ func AuthMiddleWare() gin.HandlerFunc {
 
 	}
 }
+
+// OptionalAuth enriches public requests when a valid session is present but
+// never turns an anonymous or expired session into an authentication error.
+func OptionalAuth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		token, err := utils.GetAccessToken(c)
+		if err == nil && token != "" {
+			if claims, validateErr := utils.ValidateToken(token); validateErr == nil {
+				c.Set("userId", claims.UserId)
+				c.Set("role", claims.Role)
+			}
+		}
+		c.Next()
+	}
+}

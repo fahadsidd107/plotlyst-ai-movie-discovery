@@ -28,6 +28,19 @@ type Config struct {
 	TMDBTimeout           time.Duration
 	TMDBCacheTTL          time.Duration
 	TMDBMaxRetries        int
+	AIProvider            string
+	AIModel               string
+	AITimeout             time.Duration
+	AIMaxInputChars       int
+	AIMaxOutputTokens     int
+	AIDailyUserBudget     int
+	AICacheTTL            time.Duration
+	OpusDataAPIKey        string
+	OpusDataBaseURL       string
+	OpusDataTimeout       time.Duration
+	BoxOfficeDemoEnabled  bool
+	CookieSecure          bool
+	CookieSameSite        string
 }
 
 func Load() (Config, error) {
@@ -44,6 +57,11 @@ func Load() (Config, error) {
 		TMDBAPIKey:         strings.TrimSpace(os.Getenv("TMDB_API_KEY")),
 		TMDBBaseURL:        envOrDefault("TMDB_BASE_URL", "https://api.themoviedb.org/3"),
 		TMDBImageBaseURL:   envOrDefault("TMDB_IMAGE_BASE_URL", "https://image.tmdb.org/t/p"),
+		AIProvider:         strings.ToLower(envOrDefault("AI_PROVIDER", "offline")),
+		AIModel:            envOrDefault("AI_MODEL", "gpt-4.1-mini"),
+		OpusDataAPIKey:     strings.TrimSpace(os.Getenv("OPUSDATA_API_KEY")),
+		OpusDataBaseURL:    strings.TrimRight(strings.TrimSpace(os.Getenv("OPUSDATA_BASE_URL")), "/"),
+		CookieSameSite:     strings.ToLower(envOrDefault("COOKIE_SAME_SITE", "lax")),
 	}
 	for _, origin := range strings.Split(envOrDefault("ALLOWED_ORIGINS", "http://localhost:5173"), ",") {
 		if origin = strings.TrimSpace(origin); origin != "" {
@@ -63,6 +81,32 @@ func Load() (Config, error) {
 	}
 	if cfg.TMDBMaxRetries, err = strconv.Atoi(envOrDefault("TMDB_MAX_RETRIES", "3")); err != nil || cfg.TMDBMaxRetries < 0 || cfg.TMDBMaxRetries > 5 {
 		return Config{}, errors.New("TMDB_MAX_RETRIES must be an integer between 0 and 5")
+	}
+	if cfg.AITimeout, err = time.ParseDuration(envOrDefault("AI_TIMEOUT", "8s")); err != nil || cfg.AITimeout <= 0 {
+		return Config{}, errors.New("AI_TIMEOUT must be a positive duration")
+	}
+	if cfg.AICacheTTL, err = time.ParseDuration(envOrDefault("AI_CACHE_TTL", "30m")); err != nil || cfg.AICacheTTL <= 0 {
+		return Config{}, errors.New("AI_CACHE_TTL must be a positive duration")
+	}
+	if cfg.AIMaxInputChars, err = strconv.Atoi(envOrDefault("AI_MAX_INPUT_CHARS", "800")); err != nil || cfg.AIMaxInputChars < 80 || cfg.AIMaxInputChars > 4000 {
+		return Config{}, errors.New("AI_MAX_INPUT_CHARS must be between 80 and 4000")
+	}
+	if cfg.AIMaxOutputTokens, err = strconv.Atoi(envOrDefault("AI_MAX_OUTPUT_TOKENS", "350")); err != nil || cfg.AIMaxOutputTokens < 50 || cfg.AIMaxOutputTokens > 2000 {
+		return Config{}, errors.New("AI_MAX_OUTPUT_TOKENS must be between 50 and 2000")
+	}
+	if cfg.AIDailyUserBudget, err = strconv.Atoi(envOrDefault("AI_DAILY_USER_BUDGET", "20")); err != nil || cfg.AIDailyUserBudget < 1 || cfg.AIDailyUserBudget > 500 {
+		return Config{}, errors.New("AI_DAILY_USER_BUDGET must be between 1 and 500")
+	}
+	if cfg.OpusDataTimeout, err = time.ParseDuration(envOrDefault("OPUSDATA_TIMEOUT", "8s")); err != nil || cfg.OpusDataTimeout <= 0 {
+		return Config{}, errors.New("OPUSDATA_TIMEOUT must be a positive duration")
+	}
+	cfg.BoxOfficeDemoEnabled, err = strconv.ParseBool(envOrDefault("BOX_OFFICE_DEMO_ENABLED", "true"))
+	if err != nil {
+		return Config{}, errors.New("BOX_OFFICE_DEMO_ENABLED must be true or false")
+	}
+	cfg.CookieSecure, err = strconv.ParseBool(envOrDefault("COOKIE_SECURE", "false"))
+	if err != nil {
+		return Config{}, errors.New("COOKIE_SECURE must be true or false")
 	}
 
 	var problems []string
@@ -89,6 +133,21 @@ func Load() (Config, error) {
 	}
 	if cfg.OpenAIAPIKey != "" && !strings.Contains(cfg.BasePromptTemplate, "{rankings}") {
 		problems = append(problems, "BASE_PROMPT_TEMPLATE must contain {rankings} when OPENAI_API_KEY is configured")
+	}
+	if cfg.AIProvider != "offline" && cfg.AIProvider != "openai" {
+		problems = append(problems, "AI_PROVIDER must be offline or openai")
+	}
+	if cfg.AIProvider == "openai" && cfg.OpenAIAPIKey == "" {
+		problems = append(problems, "OPENAI_API_KEY is required when AI_PROVIDER=openai")
+	}
+	if (cfg.OpusDataAPIKey == "") != (cfg.OpusDataBaseURL == "") {
+		problems = append(problems, "OPUSDATA_API_KEY and OPUSDATA_BASE_URL must be configured together")
+	}
+	if cfg.CookieSameSite != "lax" && cfg.CookieSameSite != "strict" && cfg.CookieSameSite != "none" {
+		problems = append(problems, "COOKIE_SAME_SITE must be lax, strict, or none")
+	}
+	if cfg.CookieSameSite == "none" && !cfg.CookieSecure {
+		problems = append(problems, "COOKIE_SECURE must be true when COOKIE_SAME_SITE=none")
 	}
 	if len(problems) > 0 {
 		return Config{}, fmt.Errorf("invalid environment configuration: %s", strings.Join(problems, "; "))

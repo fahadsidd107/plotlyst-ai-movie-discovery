@@ -1,6 +1,6 @@
 # Plotlyst — Advanced Feature Development Roadmap
 
-## Step 7 — Story DNA: Intelligent Movie Characteristics & Discovery
+## Step 8 — Story DNA: Intelligent Movie Characteristics & Discovery
 
 ### Objective
 Build an intelligent movie analysis and discovery system that goes beyond traditional genre-based recommendations.
@@ -36,7 +36,7 @@ Users can open a movie, understand its storytelling characteristics, and discove
 
 ---
 
-## Step 8 — Spoiler Firewall: Personalized Spoiler Protection
+## Step 9 — Spoiler Firewall: Personalized Spoiler Protection
 
 ### Objective
 Introduce an intelligent spoiler prevention system that protects users from unwanted movie and television spoilers throughout Plotlyst.
@@ -73,7 +73,7 @@ Users can browse films and TV shows according to their preferred spoiler protect
 
 ---
 
-## Step 9 — Plotlyst Debate: AI-Powered Audience Opinion Analysis
+## Step 10 — Plotlyst Debate: AI-Powered Audience Opinion Analysis
 
 ### Objective
 Build a review intelligence feature that explains why audiences love, dislike, or disagree about particular films.
@@ -114,7 +114,7 @@ Users can understand the main reasons a movie receives positive and negative rat
 
 ---
 
-## Step 10 — Alternate Cut: Movie Edition Comparison Lab
+## Step 11 — Alternate Cut: Movie Edition Comparison Lab
 
 ### Objective
 Build a dedicated system for exploring and comparing officially released versions of the same film.
@@ -155,7 +155,7 @@ Users can compare real, documented movie editions, understand their differences,
 
 ---
 
-## Step 11 — Taste Clash: Movie Compatibility & Shared Watchlists
+## Step 12 — Taste Clash: Movie Compatibility & Shared Watchlists
 
 ### Objective
 Create a social movie compatibility engine that compares users' preferences and helps them discover films they can enjoy together.
@@ -198,7 +198,7 @@ Users can compare their movie tastes, discover meaningful similarities and disag
 
 ---
 
-## Step 12 — Cinema Time Machine: Personal Taste Evolution & Analytics
+## Step 13 — Cinema Time Machine: Personal Taste Evolution & Analytics
 
 ### Objective
 Create a personal cinema analytics experience that shows how a user's movie preferences and viewing habits evolve over time.

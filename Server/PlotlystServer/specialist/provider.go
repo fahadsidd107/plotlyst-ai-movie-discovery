@@ -15,6 +15,7 @@ const (
 	StatusAvailable   Status = "available"
 	StatusPartial     Status = "partial"
 	StatusUnavailable Status = "unavailable"
+	StatusDemo        Status = "demo"
 )
 
 type SourceMeta struct {
@@ -86,6 +87,7 @@ type BoxOfficeSnapshot struct {
 	Currency    string           `json:"currency" bson:"currency"`
 	Entries     []BoxOfficeEntry `json:"entries" bson:"entries"`
 	Source      SourceMeta       `json:"source" bson:"source"`
+	Demo        bool             `json:"demo,omitempty" bson:"-"`
 }
 type EditorialRecord struct {
 	ID                 string `json:"id" bson:"external_id"`

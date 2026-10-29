@@ -1,0 +1,41 @@
+name: quality
+on:
+  push:
+  pull_request:
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:8
+        ports: ["27017:27017"]
+        options: --health-cmd "mongosh --quiet --eval 'db.adminCommand(\"ping\").ok'" --health-interval 10s --health-timeout 5s --health-retries 10
+    env:
+      TEST_MONGODB_URI: mongodb://127.0.0.1:27017
+    defaults: {run: {working-directory: Server/PlotlystServer}}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: {go-version: '1.24.x', cache-dependency-path: Server/PlotlystServer/go.sum}
+      - run: gofmt -l . | tee /tmp/gofmt-files && test ! -s /tmp/gofmt-files
+      - run: go vet ./...
+      - run: go test -race -coverprofile=coverage.out ./...
+      - run: go build ./...
+  frontend:
+    runs-on: ubuntu-latest
+    defaults: {run: {working-directory: Client/plotlyst-client}}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '24', cache: npm, cache-dependency-path: Client/plotlyst-client/package-lock.json}
+      - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+  containers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t plotlyst-api:test Server/PlotlystServer
+      - run: docker build -t plotlyst-client:test Client/plotlyst-client

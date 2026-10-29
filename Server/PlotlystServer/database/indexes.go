@@ -27,6 +27,9 @@ func EnsureIndexes(ctx context.Context, client *mongo.Client) error {
 		"award_ceremonies":     {{Keys: bson.D{{Key: "organization_id", Value: 1}, {Key: "year", Value: 1}}, Options: options.Index().SetUnique(true)}},
 		"box_office_snapshots": {{Keys: bson.D{{Key: "source.provider", Value: 1}, {Key: "period", Value: 1}, {Key: "period_end", Value: 1}}, Options: options.Index().SetUnique(true)}},
 		"editorial_records":    {{Keys: bson.D{{Key: "source.provider", Value: 1}, {Key: "external_id", Value: 1}, {Key: "classification_type", Value: 1}, {Key: "region", Value: 1}}, Options: options.Index().SetUnique(true)}},
+		"movie_nights":         {{Keys: bson.D{{Key: "code", Value: 1}}, Options: options.Index().SetUnique(true)}, {Keys: bson.D{{Key: "expires_at", Value: 1}}, Options: options.Index().SetExpireAfterSeconds(0)}},
+		"ai_privacy":           {{Keys: bson.D{{Key: "user_id", Value: 1}}, Options: options.Index().SetUnique(true)}},
+		"story_dna_profiles":   {{Keys: bson.D{{Key: "movie_id", Value: 1}}, Options: options.Index().SetUnique(true)}, {Keys: bson.D{{Key: "provenance.schema_version", Value: 1}, {Key: "updated_at", Value: -1}}}},
 	}
 	for name, models := range indexes {
 		if _, err := db.Collection(name).Indexes().CreateMany(ctx, models); err != nil {

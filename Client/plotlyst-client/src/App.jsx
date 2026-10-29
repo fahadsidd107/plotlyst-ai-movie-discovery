@@ -9,25 +9,44 @@ import Layout from './components/Layout';
 import RequiredAuth from './components/RequiredAuth';
 import useAuth from './hooks/useAuth';
 import LoadingScreen from './components/ui/LoadingScreen';
-import { useEffect, useState } from 'react';
-import CatalogLanding from './components/catalog/CatalogLanding';
-import DetailPage from './components/catalog/DetailPage';
-import PeoplePage from './components/catalog/PeoplePage';
-import PersonDetail from './components/catalog/PersonDetail';
-import SeasonPage from './components/catalog/SeasonPage';
-import EpisodePage from './components/catalog/EpisodePage';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import LoadingLab from './components/ui/LoadingLab';
-import SearchResults from './components/discovery/SearchResults';
-import DiscoverPage from './components/discovery/DiscoverPage';
-import { ChartsIndex, ChartPage } from './components/discovery/Charts';
-import { Collections, Franchise } from './components/discovery/Collections';
 import { getMovie, getMovies, getTV, getTVDetail } from './api/catalog';
 import { authApi } from './api/step4';
 import RoleGuard from './components/RoleGuard';
-import { LibraryDashboard, WatchlistPage, HistoryPage, PlaylistPage } from './components/library/LibraryPages';
-import { PublicProfile, ProfileSettings, PrivacySettings, PreferenceSettings } from './components/profile/ProfilePages';
-import Moderation from './components/moderation/Moderation';
-import { SpecialistIndex, Awards, AwardCeremony, BoxOffice, Streaming, Editorial } from './components/specialist/SpecialistPages';
+
+const CatalogLanding=lazy(()=>import('./components/catalog/CatalogLanding'));
+const DetailPage=lazy(()=>import('./components/catalog/DetailPage'));
+const PeoplePage=lazy(()=>import('./components/catalog/PeoplePage'));
+const PersonDetail=lazy(()=>import('./components/catalog/PersonDetail'));
+const SeasonPage=lazy(()=>import('./components/catalog/SeasonPage'));
+const EpisodePage=lazy(()=>import('./components/catalog/EpisodePage'));
+const SearchResults=lazy(()=>import('./components/discovery/SearchResults'));
+const DiscoverPage=lazy(()=>import('./components/discovery/DiscoverPage'));
+const ChartsIndex=lazy(()=>import('./components/discovery/Charts').then(m=>({default:m.ChartsIndex})));
+const ChartPage=lazy(()=>import('./components/discovery/Charts').then(m=>({default:m.ChartPage})));
+const Collections=lazy(()=>import('./components/discovery/Collections').then(m=>({default:m.Collections})));
+const Franchise=lazy(()=>import('./components/discovery/Collections').then(m=>({default:m.Franchise})));
+const LibraryDashboard=lazy(()=>import('./components/library/LibraryPages').then(m=>({default:m.LibraryDashboard})));
+const WatchlistPage=lazy(()=>import('./components/library/LibraryPages').then(m=>({default:m.WatchlistPage})));
+const HistoryPage=lazy(()=>import('./components/library/LibraryPages').then(m=>({default:m.HistoryPage})));
+const PlaylistPage=lazy(()=>import('./components/library/LibraryPages').then(m=>({default:m.PlaylistPage})));
+const PublicProfile=lazy(()=>import('./components/profile/ProfilePages').then(m=>({default:m.PublicProfile})));
+const ProfileSettings=lazy(()=>import('./components/profile/ProfilePages').then(m=>({default:m.ProfileSettings})));
+const PrivacySettings=lazy(()=>import('./components/profile/ProfilePages').then(m=>({default:m.PrivacySettings})));
+const PreferenceSettings=lazy(()=>import('./components/profile/ProfilePages').then(m=>({default:m.PreferenceSettings})));
+const Moderation=lazy(()=>import('./components/moderation/Moderation'));
+const SpecialistIndex=lazy(()=>import('./components/specialist/SpecialistPages').then(m=>({default:m.SpecialistIndex})));
+const Awards=lazy(()=>import('./components/specialist/SpecialistPages').then(m=>({default:m.Awards})));
+const AwardCeremony=lazy(()=>import('./components/specialist/SpecialistPages').then(m=>({default:m.AwardCeremony})));
+const BoxOffice=lazy(()=>import('./components/specialist/SpecialistPages').then(m=>({default:m.BoxOffice})));
+const Streaming=lazy(()=>import('./components/specialist/SpecialistPages').then(m=>({default:m.Streaming})));
+const Editorial=lazy(()=>import('./components/specialist/SpecialistPages').then(m=>({default:m.Editorial})));
+const AIDiscovery=lazy(()=>import('./components/intelligence/IntelligencePages').then(m=>({default:m.AIDiscovery})));
+const CinemaDNA=lazy(()=>import('./components/intelligence/IntelligencePages').then(m=>({default:m.CinemaDNA})));
+const MovieNightLobby=lazy(()=>import('./components/intelligence/IntelligencePages').then(m=>({default:m.MovieNightLobby})));
+const MovieNightRoom=lazy(()=>import('./components/intelligence/IntelligencePages').then(m=>({default:m.MovieNightRoom})));
+const StoryDnaDiscovery=lazy(()=>import('./components/storyDna/StoryDnaDiscovery'));
 
 import {Route, Routes, useNavigate} from 'react-router-dom'
 
@@ -68,7 +87,7 @@ function App() {
   return (
     <div className="app-shell">
       <Header handleLogout = {handleLogout}/>
-      <Routes>
+      <Suspense fallback={<LoadingScreen compact/>}><Routes>
         <Route path="/test" element={<LoadingLab />}></Route>
         <Route element={<Layout />}>
           <Route path="/" element={<Home updateMovieReview={updateMovieReview}/>}></Route>
@@ -83,6 +102,8 @@ function App() {
           <Route path="/box-office" element={<BoxOffice/>}></Route>
           <Route path="/streaming" element={<Streaming/>}></Route>
           <Route path="/editorial" element={<Editorial/>}></Route>
+          <Route path="/ai-discovery" element={<AIDiscovery/>}></Route>
+          <Route path="/story-dna" element={<StoryDnaDiscovery/>}></Route>
           <Route path="/franchise/:id" element={<Franchise/>}></Route>
           <Route path="/movies" element={<CatalogLanding kind="movie" eyebrow="The big-screen signal" title="Movies worth leaving the group chat for." copy="Fresh phenomena, modern classics and glorious oddities—programmed like the film festival in your head." loader={getMovies}/>}></Route>
           <Route path="/movie/:id" element={<DetailPage type="movie" loader={getMovie}/>}></Route>
@@ -106,10 +127,13 @@ function App() {
               <Route path="/settings/profile" element={<ProfileSettings/>}></Route>
               <Route path="/settings/privacy" element={<PrivacySettings/>}></Route>
               <Route path="/settings/preferences" element={<PreferenceSettings/>}></Route>
+              <Route path="/cinema-dna" element={<CinemaDNA/>}></Route>
+              <Route path="/movie-night" element={<MovieNightLobby/>}></Route>
+              <Route path="/movie-night/:code" element={<MovieNightRoom/>}></Route>
           </Route>
           <Route element={<RoleGuard roles={['MODERATOR','ADMIN']}/>}><Route path="/moderation" element={<Moderation/>}/></Route>
         </Route>
-      </Routes>
+      </Routes></Suspense>
       <footer className="site-footer">
         <div className="site-footer__inner">
           <strong>Plotlyst</strong>

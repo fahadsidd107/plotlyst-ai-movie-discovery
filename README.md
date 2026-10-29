@@ -50,6 +50,20 @@ Its long-term direction includes real movie and television metadata, rich search
 - Trending, fan-favourite, year, decade and genre destinations
 - Explicit official-franchise, editorial-collection and user-list ownership boundaries
 - Cinema-first Midnight Premiere interface with projector, film-strip, ticket and screening-programme details
+- Typed natural-language and movie-memory discovery with AI/local intent provenance
+- Server-side retrieval, deterministic ranking and explanations that keep TMDB payloads outside model prompts
+- Cinema DNA analytics generated from real MongoDB activity with explicit coverage reporting
+- Persistent Group Movie Night rooms with authenticated live updates and deterministic preference intersection
+- Licensed OpusData box-office seam with a conspicuous synthetic demo fallback for local development
+- Public AI Desk discovery with authenticated personalization kept behind privacy controls
+- Structured JSON request logs, correlation IDs, Prometheus metrics and operational health probes
+- Hardened cookie policy, security headers, request-size limits and rate-limited write surfaces
+- OpenAPI documentation with automated contract validation
+- Go race, provider-mock, repository/integration and frontend interaction test suites
+- Route-level React lazy loading plus TMDB request coalescing and bounded caching
+- Production Docker images, Docker Compose, CI quality gates, Render and Vercel configuration
+- Story DNA narrative fingerprints with versioned provenance, bounded confidence and spoiler-safe traits
+- Adjustable, deterministic story-similarity discovery with grounded comparison explanations
 
 ## Architecture
 
@@ -62,9 +76,12 @@ React + Vite client (:5173)
   ▼
 Go + Gin API (:8080)
   ├── Authentication middleware
+  ├── Request IDs, structured logs, metrics and security middleware
   ├── Movie, television, people and user controllers
-	├── TMDB client → timeout / retry / rate-limit / memory cache
-	├── Discovery orchestration → homepage / search / filters / charts
+  ├── TMDB client → timeout / retry / rate-limit / coalesced cache
+  ├── Discovery orchestration → homepage / search / filters / charts
+  ├── Intelligence pipeline → intent / validation / retrieval / ranking / explanation
+  ├── Specialist providers → streaming / awards / box office / editorial
   ├── Recommendation and review logic
   ├── LangChainGo → OpenAI (optional)
   └── MongoDB driver
@@ -78,6 +95,9 @@ The backend currently follows a compact layered structure:
 ```text
 Server/PlotlystServer/
 ├── controllers/    # HTTP handlers and current application workflows
+├── intelligence/   # Typed AI/local intent, retrieval, ranking and explanations
+├── specialist/     # Traceable availability, awards and box-office providers
+├── contracts/      # OpenAPI contract validation
 ├── database/       # MongoDB connection and collection access
 ├── middleware/     # Authentication and request authorization
 ├── models/         # BSON/JSON domain models
@@ -95,16 +115,16 @@ As the domain grows, business rules will move behind handler → service → rep
 
 | Area | Current implementation | Planned evolution |
 |---|---|---|
-| Frontend | React 19, Vite, React Router, Axios | Advanced discovery, accessibility and component tests |
-| UI | Midnight Pop cinema design system, Bootstrap, React Bootstrap | Component tests and deeper interaction polish |
-| Backend | Go, Gin, context-aware MongoDB driver, resilient TMDB client | Service/repository layers and OpenAPI |
-| Database | MongoDB with BSON models and seed automation | Indexed ratings, reviews, lists, activity and cache collections |
-| Authentication | bcrypt, JWT access/refresh tokens, HTTP-only cookies | Session hardening, moderation roles and account settings |
-| AI | LangChainGo + optional OpenAI, offline fallback | Structured natural-language search and explainable recommendations |
-| Live features | Not implemented yet | WebSocket-powered notifications and collaborative group sessions |
+| Frontend | React 19, Vite, React Router, Axios, lazy route chunks | Ongoing real-device polish |
+| UI | Midnight Pop cinema design system, Bootstrap, React Bootstrap | Ongoing accessibility evaluation |
+| Backend | Go, Gin, context-aware MongoDB driver, resilient TMDB client | Further domain repository extraction |
+| Database | MongoDB with indexed community, activity, live-room and cache collections | Production capacity tuning |
+| Authentication | bcrypt, JWT rotation, hardened HTTP-only cookies, USER/MODERATOR/ADMIN | External penetration review |
+| AI | Typed OpenAI intent extraction or deterministic local parser; server-side retrieval/ranking | Activity metadata enrichment and model/provider evaluations |
+| Live features | Authenticated Movie Night rooms and WebSocket snapshots | Candidate ballots, provider intersection and notifications |
 | Catalogue data | TMDB plus compatible curated local fixtures | Search, charts and licensed specialist providers |
-| Quality | Go unit tests, provider-client tests, migration tests, ESLint and Vite builds | Frontend and contract test suites |
-| Delivery | One-command local environment | Docker, CI/CD, Vercel frontend and containerized API hosting |
+| Quality | Go race/unit/integration/provider tests, Vitest interactions, ESLint, OpenAPI contracts | Deployed Lighthouse and physical-device audits |
+| Delivery | One-command local environment, Docker Compose, CI, Vercel and Render manifests | Publish to account-owned production hosts |
 
 ## Current API
 
@@ -113,6 +133,7 @@ As the domain grows, business rules will move behind handler → service → rep
 | `GET` | `/hello` | Public | API health smoke test |
 | `GET` | `/health/live` | Public | Confirm the API process is alive |
 | `GET` | `/health/ready` | Public | Confirm MongoDB-backed readiness |
+| `GET` | `/metrics` | Public/operations | Prometheus-compatible request metrics |
 | `GET` | `/movies` | Public | List catalogue movies |
 | `GET` | `/genres` | Public | List registration/discovery genres |
 | `POST` | `/register` | Public | Create a user with a hashed password |
@@ -141,6 +162,15 @@ As the domain grows, business rules will move behind handler → service → rep
 | `GET` | `/api/discovery/charts/:media/:size` | Public | Top 100, 250 or 2,000 chart page |
 | `GET` | `/api/discovery/franchises/:id` | Public | Official TMDB franchise |
 | `GET` | `/api/discovery/collection-kinds` | Public | Collection ownership/source definitions |
+| `POST` | `/api/ai/discover` | Public; optional session | Typed natural-language discovery with optional personalization |
+| `POST` | `/api/ai/memory-search` | Public; optional session | Search from a remembered scene or description |
+| `GET` | `/api/story-dna/movies/:id` | Public | Inferred narrative profile with confidence and provenance |
+| `POST` | `/api/story-dna/discover` | Public | Weighted, explainable story-similarity discovery |
+| `GET` | `/api/analytics/cinema-dna` | Authenticated | Aggregate personal activity analytics |
+| `POST` | `/api/movie-night/rooms` | Authenticated | Create a collaborative room |
+| `POST` | `/api/movie-night/rooms/:code/join` | Authenticated | Join a room by code |
+| `PUT` | `/api/movie-night/rooms/:code/preferences` | Participant | Update the shared preference ballot |
+| `GET` | `/api/movie-night/rooms/:code/ws` | Participant | Open the authenticated live room channel |
 
 ## Run locally
 
@@ -148,7 +178,7 @@ As the domain grows, business rules will move behind handler → service → rep
 
 - macOS with Homebrew
 - Go 1.24 or newer
-- Node.js 20 or newer
+- Node.js 22.22.2 or newer
 - MongoDB Community 8
 - MongoDB Shell and Database Tools
 
@@ -198,6 +228,17 @@ TMDB_IMAGE_BASE_URL=https://image.tmdb.org/t/p
 TMDB_TIMEOUT=8s
 TMDB_CACHE_TTL=10m
 TMDB_MAX_RETRIES=3
+AI_PROVIDER=offline
+AI_MODEL=gpt-4.1-mini
+AI_TIMEOUT=8s
+AI_MAX_INPUT_CHARS=800
+AI_MAX_OUTPUT_TOKENS=350
+AI_DAILY_USER_BUDGET=20
+AI_CACHE_TTL=30m
+OPUSDATA_API_KEY=
+OPUSDATA_BASE_URL=
+OPUSDATA_TIMEOUT=8s
+BOX_OFFICE_DEMO_ENABLED=true
 ```
 
 Frontend file: `Client/plotlyst-client/.env`
@@ -211,6 +252,10 @@ Generate JWT secrets with `openssl rand -hex 32`. Environment files are ignored 
 The browser never receives `TMDB_API_KEY`. If TMDB returns `Invalid API key`, create or activate a v3 key in your TMDB account and replace only the value in `Server/PlotlystServer/.env`.
 
 `OPENAI_API_KEY` is optional. Without it, review updates use the deterministic offline classifier. With it, the backend uses LangChainGo to make a real model request and validates the returned ranking before persistence.
+
+For Step 6 discovery, `AI_PROVIDER=offline` keeps intent extraction local. Set it to `openai` and provide `OPENAI_API_KEY` to enable typed model extraction; retrieval and ranking remain server-side, and the response always identifies which path ran.
+
+Box-office pages use explicitly labelled synthetic demo fixtures until both OpusData settings are supplied. The licensed API endpoint and response mapping must match your OpusData contract; Plotlyst does not guess or scrape The Numbers. A configured provider failure is surfaced instead of silently falling back to demo values.
 
 ## Data model today
 
@@ -252,25 +297,30 @@ The TMDB catalogue adapter keeps provider credentials on the Go server and uses 
 
 Chart eligibility, formula, stable tie-breaking and live-snapshot limits are documented in [`docs/RANKING_METHODOLOGY.md`](docs/RANKING_METHODOLOGY.md). Franchise, editorial and user-list ownership boundaries are documented in [`docs/COLLECTION_TYPES.md`](docs/COLLECTION_TYPES.md).
 
+Story DNA classification, confidence, spoilers, deterministic weighting and the future authorized-AI seam are documented in [`docs/STORY_DNA_POLICY.md`](docs/STORY_DNA_POLICY.md).
+
 ## Build and validation
 
 ```bash
 # Frontend
 npm --prefix Client/plotlyst-client run lint
+npm --prefix Client/plotlyst-client test
 npm --prefix Client/plotlyst-client run build
 
 # Backend
 cd Server/PlotlystServer
 go test ./...
+go test -race ./...
+go vet ./...
 ```
 
-The current response conventions and structured error envelope are documented in [`docs/API_CONTRACTS.md`](docs/API_CONTRACTS.md).
+The HTTP contract is published as [`docs/openapi.yaml`](docs/openapi.yaml), and response conventions are documented in [`docs/API_CONTRACTS.md`](docs/API_CONTRACTS.md). Production setup and the honest remaining audit boundary are described in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) and [`docs/PRODUCTION_AUDIT.md`](docs/PRODUCTION_AUDIT.md).
 
 Run the idempotent legacy editorial-rating compatibility migration with `npm run migrate:ratings`.
 
 ## Status
 
-Plotlyst is under active development. The authenticated MongoDB-backed foundation and TMDB movie, television and people catalogue work today; later roadmap phases will be delivered incrementally.
+Plotlyst is feature-complete through the local production-readiness baseline. The application, tests, containers, CI and deployment manifests are ready; publishing the frontend and persistent API remains intentionally open until account-owned Vercel and Go-hosting credentials are supplied.
 
 ---
 

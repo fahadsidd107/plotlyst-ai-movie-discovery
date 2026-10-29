@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -15,6 +16,34 @@ type roundTripFunc func(*http.Request) (*http.Response, error)
 func (fn roundTripFunc) RoundTrip(request *http.Request) (*http.Response, error) { return fn(request) }
 func response(status int, body string) *http.Response {
 	return &http.Response{StatusCode: status, Header: http.Header{}, Body: io.NopCloser(strings.NewReader(body))}
+}
+
+func TestClientCoalescesConcurrentRequests(t *testing.T) {
+	var calls atomic.Int32
+	client := New("https://example.test", "secret", time.Second, time.Minute, 0)
+	client.http.Transport = roundTripFunc(func(*http.Request) (*http.Response, error) {
+		calls.Add(1)
+		time.Sleep(30 * time.Millisecond)
+		return response(200, `{"page":1,"results":[]}`), nil
+	})
+	var wg sync.WaitGroup
+	start := make(chan struct{})
+	for range 12 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-start
+			var page Page[MediaSummary]
+			if err := client.Get(context.Background(), "/trending/movie/week", nil, &page); err != nil {
+				t.Error(err)
+			}
+		}()
+	}
+	close(start)
+	wg.Wait()
+	if calls.Load() != 1 {
+		t.Fatalf("expected one coalesced upstream request, got %d", calls.Load())
+	}
 }
 
 func TestClientCachesSuccessfulResponses(t *testing.T) {

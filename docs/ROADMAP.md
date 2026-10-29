@@ -67,33 +67,52 @@ This plan translates the master product brief into manageable vertical slices. A
 
 **Outcome:** specialist pages backed by traceable data rather than invented values.
 
-**Coverage boundary:** availability is live TMDB/JustWatch data. Awards, box-office and editorial records require administrator imports with a source URL and license manifest. Until a licensed source is imported, these APIs deliberately return `unavailable`; they never manufacture records or represent missing revenue as zero. See [`SPECIALIST_DATA_POLICY.md`](SPECIALIST_DATA_POLICY.md).
+**Coverage boundary:** availability is live TMDB/JustWatch data. Awards and editorial records require administrator imports with a source URL and license manifest. Box office uses licensed OpusData only when credentials and the contracted base URL are configured; local development otherwise shows a conspicuous synthetic `demo` snapshot, never a verified claim. See [`SPECIALIST_DATA_POLICY.md`](SPECIALIST_DATA_POLICY.md).
 
 ## Step 6 — AI, analytics and live experiences
 
-⬜ Split AI into intent extraction, validated filters, retrieval, ranking and explanation services.  
-⬜ Implement natural-language discovery with typed structured output.  
-⬜ Add movie-memory search and mood/runtime/language-aware discovery.  
-⬜ Generate grounded recommendation explanations from real user activity.  
-⬜ Build Cinema DNA analytics with MongoDB aggregations.  
-⬜ Add Group Movie Night and preference intersection.  
-⬜ Introduce WebSocket infrastructure only where live notifications or collaborative sessions justify it.  
-⬜ Add token/cost budgets, timeouts, caching, provenance, privacy controls and prompt-injection defenses.
+✅ Split AI into intent extraction, validated filters, retrieval, ranking and explanation services.
+✅ Implement natural-language discovery with typed structured output.
+✅ Add movie-memory search and mood/runtime/language-aware discovery.
+✅ Generate opt-in grounded recommendation explanations from real user activity counts.
+✅ Build Cinema DNA analytics with MongoDB aggregations.
+✅ Add Group Movie Night and preference intersection.
+✅ Introduce WebSocket infrastructure only for collaborative Movie Night rooms.
+✅ Add request budgets, timeouts, caching, provenance, privacy controls and prompt-injection defenses.
 
 **Outcome:** real, explainable AI and live features—not relabeled keyword search.
 
+**AI and coverage boundary:** AI receives only bounded user-written discovery text; TMDB payloads never enter model prompts. With `AI_PROVIDER=offline`, Plotlyst visibly uses a deterministic parser. Personal activity explanations require stored opt-in settings plus request consent. Cinema DNA reports the coverage gap for legacy activity rows that lack genre/runtime/language snapshots. Movie Night REST is authoritative and its authenticated live channel is limited to participants. See [`AI_DATA_POLICY.md`](AI_DATA_POLICY.md) and [`GROUP_MOVIE_NIGHT.md`](GROUP_MOVIE_NIGHT.md).
+
 ## Step 7 — Production readiness
 
-⬜ Add Go unit, integration and repository tests with external-provider mocks.  
-⬜ Add frontend component, interaction and responsive-navigation tests.  
-⬜ Add OpenAPI documentation and contract validation.  
-⬜ Add structured logging, request IDs, metrics and operational health endpoints.  
-⬜ Optimize homepage aggregation, indexes, caching, lazy loading and request deduplication.  
-⬜ Add Docker configuration, CI quality gates and deployment documentation.  
-⬜ Deploy the client to Vercel and the containerized API to persistent Go hosting.  
-⬜ Complete accessibility, security, performance and responsive-device audits.
+✅ Add Go unit, integration and repository tests with external-provider mocks.
+✅ Add frontend component, interaction and responsive-navigation tests.
+✅ Add OpenAPI documentation and contract validation.
+✅ Add structured logging, request IDs, metrics and operational health endpoints.
+✅ Optimize homepage aggregation, indexes, caching, lazy loading and request deduplication.
+✅ Add Docker configuration, CI quality gates and deployment documentation.
+⬜ Deploy the client to Vercel and the containerized API to persistent Go hosting.
+✅ Complete the local accessibility, security, performance and responsive-device audit baseline.
 
-**Outcome:** a documented, observable and deployable portfolio application.
+**Outcome:** a documented, observable and deployable portfolio application. The repository is deployment-ready; publishing it is the only account-dependent Step 7 action still open.
+
+**Production boundary:** CI runs Go race/unit/contract tests, a MongoDB-backed integration suite, frontend interaction tests, lint, production builds and dependency audits. Docker, Render and Vercel configurations plus deployment and production-audit guides are committed. Final public deployment, deployed Lighthouse runs, physical-device/screen-reader passes and an external security review require the production URLs and hosting accounts, so they are not represented as completed deployment work. See [`DEPLOYMENT.md`](DEPLOYMENT.md) and [`PRODUCTION_AUDIT.md`](PRODUCTION_AUDIT.md).
+
+## Step 8 — Story DNA
+
+✅ Add versioned Story DNA profiles for supported movies.
+✅ Classify narrative structure, tone, pacing, complexity and storytelling style.
+✅ Persist validated structured characteristics with confidence and provenance.
+✅ Display an interactive, spoiler-safe narrative fingerprint on movie detail pages.
+✅ Add weighted similarity discovery and natural-language seed searches.
+✅ Generate deterministic explanations grounded in compared characteristics.
+✅ Add adjustable mood, pacing, complexity and structure priorities.
+✅ Document the AI/data boundary and expose honest heuristic limitations.
+
+**Outcome:** users can understand a supported movie’s inferred storytelling profile and find explainable narrative matches beyond genre.
+
+**Classification boundary:** the current classifier is a versioned, deterministic metadata heuristic derived from permitted TMDB genre, runtime, release and vote fields. Its confidence is deliberately capped and the interface labels it as an inferred discovery aid—not objective artistic truth. TMDB plot text is never sent to OpenAI. Ending traits remain unknown and spoiler-hidden until an authorized editorial or licensed classifier supplies them. See [`STORY_DNA_POLICY.md`](STORY_DNA_POLICY.md).
 
 ## Definition of done for every feature
 

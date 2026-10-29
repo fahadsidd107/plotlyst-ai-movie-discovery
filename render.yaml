@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: plotlyst-api
+    runtime: docker
+    dockerfilePath: ./Server/PlotlystServer/Dockerfile
+    dockerContext: ./Server/PlotlystServer
+    healthCheckPath: /health/ready
+    autoDeployTrigger: commit
+    envVars:
+      - {key: PORT, value: '8080'}
+      - {key: GIN_MODE, value: release}
+      - {key: MONGODB_URI, sync: false}
+      - {key: DATABASE_NAME, value: plotlyst}
+      - {key: ALLOWED_ORIGINS, sync: false}
+      - {key: COOKIE_SECURE, value: 'true'}
+      - {key: COOKIE_SAME_SITE, value: none}
+      - {key: SECRET_KEY, generateValue: true}
+      - {key: SECRET_REFRESH_KEY, generateValue: true}
+      - {key: TMDB_API_KEY, sync: false}
+      - {key: OPENAI_API_KEY, sync: false}
+      - {key: AI_PROVIDER, value: offline}
+      - {key: OPUSDATA_API_KEY, sync: false}
+      - {key: OPUSDATA_BASE_URL, sync: false}
+      - {key: BOX_OFFICE_DEMO_ENABLED, value: 'false'}
