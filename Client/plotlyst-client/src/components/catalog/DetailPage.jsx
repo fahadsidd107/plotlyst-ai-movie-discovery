@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { imageUrl } from '../../api/catalog';
 import useCatalog from '../../hooks/useCatalog';
@@ -9,9 +9,12 @@ import CommunityPanel from '../community/CommunityPanel';
 import StoryDnaPanel from '../storyDna/StoryDnaPanel';
 import SpoilerCurtain from '../ui/SpoilerCurtain';
 
+const DebatePanel = lazy(() => import('../debate/DebatePanel'));
+
 const DetailPage = ({ type, loader }) => {
   const { id } = useParams();
   const [revealSpoilers,setRevealSpoilers]=useState(false);
+  const [communityTab,setCommunityTab]=useState('community');
   const { data: item, meta, loading, error, retry } = useCatalog(() => loader(id,revealSpoilers), [id,revealSpoilers]);
   if (loading) return <LoadingScreen compact />;
   if (error) return <div className="page-shell content-section"><ErrorState message={error} onRetry={retry} /></div>;
@@ -49,7 +52,14 @@ const DetailPage = ({ type, loader }) => {
       {cast.length > 0 && <section><div className="section-heading"><div><p className="eyebrow">Faces in focus</p><h2>Cast</h2></div></div><div className="people-rail">{cast.map(person => <CatalogCard key={`${person.id}-${person.character}`} item={person} meta={meta} type="people" profile />)}</div></section>}
       {(crew.length > 0 || providers) && <section className="detail-columns"><div><p className="eyebrow">Behind the frame</p><h2>Key crew</h2>{crew.slice(0, 8).map(p => <p key={`${p.id}-${p.job}`}><strong>{p.name}</strong><span>{p.job}</span></p>)}</div><div><p className="eyebrow">Watch in Germany</p><h2>Providers</h2><p>{[...(providers?.flatrate || []), ...(providers?.rent || [])].map(p => p.provider_name).filter((v, i, a) => a.indexOf(v) === i).join(' · ') || 'No regional provider data available.'}</p><small>Streaming availability data by JustWatch.</small></div></section>}
       {recommendations.length > 0 && <section><div className="section-heading"><div><p className="eyebrow">Keep the signal going</p><h2>You may also like</h2></div></div><div className="recommendations-rail">{recommendations.slice(0, 10).map(rec => <CatalogCard key={rec.id} item={rec} meta={meta} type={type} />)}</div></section>}
-      <CommunityPanel mediaType={type} mediaId={id} title={title} posterPath={item.poster_path} />
+      {type === 'movie' ? <section className="detail-conversation">
+        <div className="detail-conversation__tabs" role="tablist" aria-label="Movie community views" onKeyDown={event=>{const tabs=['community','debate'];const current=tabs.indexOf(communityTab);if(event.key==='ArrowRight'||event.key==='ArrowLeft'){event.preventDefault();const direction=event.key==='ArrowRight'?1:-1;const next=(current+direction+tabs.length)%tabs.length;setCommunityTab(tabs[next]);event.currentTarget.querySelectorAll('[role="tab"]')[next]?.focus();}}}>
+          <button id="community-tab" type="button" role="tab" aria-controls="community-panel" aria-selected={communityTab==='community'} tabIndex={communityTab==='community'?0:-1} onClick={()=>setCommunityTab('community')}>Community <small>Reviews & ratings</small></button>
+          <button id="debate-tab" type="button" role="tab" aria-controls="debate-panel" aria-selected={communityTab==='debate'} tabIndex={communityTab==='debate'?0:-1} onClick={()=>setCommunityTab('debate')}>Plotlyst Debate <small>Audience intelligence</small></button>
+        </div>
+        <div id="community-panel" role="tabpanel" aria-labelledby="community-tab" hidden={communityTab!=='community'}>{communityTab==='community'&&<CommunityPanel mediaType={type} mediaId={id} title={title} posterPath={item.poster_path} />}</div>
+        <div id="debate-panel" role="tabpanel" aria-labelledby="debate-tab" hidden={communityTab!=='debate'}>{communityTab==='debate'&&<Suspense fallback={<div className="debate-panel debate-panel--loading" aria-busy="true">Opening the debate transcript…</div>}><DebatePanel movieId={id} title={title}/></Suspense>}</div>
+      </section> : <CommunityPanel mediaType={type} mediaId={id} title={title} posterPath={item.poster_path} />}
     </div>
   </article>;
 };

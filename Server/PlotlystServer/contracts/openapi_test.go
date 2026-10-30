@@ -24,7 +24,7 @@ func TestOpenAPIContractIsValidAndCoversCriticalRoutes(t *testing.T) {
 	if spec.OpenAPI != "3.1.0" || spec.Info["title"] != "Plotlyst API" {
 		t.Fatalf("unexpected contract header: %#v", spec)
 	}
-	required := map[string][]string{"/health/live": {"get"}, "/api/catalog/movies": {"get"}, "/api/discovery/search": {"get"}, "/api/ai/discover": {"post"}, "/api/analytics/cinema-dna": {"get"}, "/api/story-dna/movies/{id}": {"get"}, "/api/story-dna/discover": {"post"}, "/api/me/spoiler-preferences": {"get", "put"}, "/api/community/reviews/{reviewId}/reveal": {"get"}, "/api/movie-night/rooms": {"post"}, "/api/specialist/box-office": {"get"}, "/api/me/profile": {"get", "put"}}
+	required := map[string][]string{"/health/live": {"get"}, "/api/catalog/movies": {"get"}, "/api/discovery/search": {"get"}, "/api/ai/discover": {"post"}, "/api/analytics/cinema-dna": {"get"}, "/api/story-dna/movies/{id}": {"get"}, "/api/story-dna/discover": {"post"}, "/api/me/spoiler-preferences": {"get", "put"}, "/api/community/reviews/{reviewId}/reveal": {"get"}, "/api/debate/movies/{id}": {"get"}, "/api/movie-night/rooms": {"post"}, "/api/specialist/box-office": {"get"}, "/api/me/profile": {"get", "put"}}
 	for path, methods := range required {
 		ops, ok := spec.Paths[path]
 		if !ok {

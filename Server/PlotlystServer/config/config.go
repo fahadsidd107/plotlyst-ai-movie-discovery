@@ -41,6 +41,7 @@ type Config struct {
 	BoxOfficeDemoEnabled  bool
 	CookieSecure          bool
 	CookieSameSite        string
+	DebateAIEnabled       bool
 }
 
 func Load() (Config, error) {
@@ -108,6 +109,10 @@ func Load() (Config, error) {
 	if err != nil {
 		return Config{}, errors.New("COOKIE_SECURE must be true or false")
 	}
+	cfg.DebateAIEnabled, err = strconv.ParseBool(envOrDefault("DEBATE_AI_ENABLED", "false"))
+	if err != nil {
+		return Config{}, errors.New("DEBATE_AI_ENABLED must be true or false")
+	}
 
 	var problems []string
 	if cfg.MongoDBURI == "" {
@@ -139,6 +144,9 @@ func Load() (Config, error) {
 	}
 	if cfg.AIProvider == "openai" && cfg.OpenAIAPIKey == "" {
 		problems = append(problems, "OPENAI_API_KEY is required when AI_PROVIDER=openai")
+	}
+	if cfg.DebateAIEnabled && cfg.OpenAIAPIKey == "" {
+		problems = append(problems, "OPENAI_API_KEY is required when DEBATE_AI_ENABLED=true")
 	}
 	if (cfg.OpusDataAPIKey == "") != (cfg.OpusDataBaseURL == "") {
 		problems = append(problems, "OPUSDATA_API_KEY and OPUSDATA_BASE_URL must be configured together")

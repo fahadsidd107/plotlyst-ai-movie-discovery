@@ -130,6 +130,24 @@ This plan translates the master product brief into manageable vertical slices. A
 
 **Detection boundary:** review authors supply the current spoiler label. Strict mode conservatively conceals even untagged community prose because automated detection cannot guarantee safety. AI spoiler detection remains intentionally disabled until review text is authorized for model processing and a moderation-review workflow, retention policy and confidence threshold are configured. See [`SPOILER_FIREWALL.md`](SPOILER_FIREWALL.md).
 
+## Step 10 — Plotlyst Debate
+
+✅ Add “What viewers loved” and “What viewers disliked” movie-detail analysis.
+✅ Aggregate genuine Plotlyst ratings and reviews with MongoDB pipelines.
+✅ Extract grounded acting, cinematography, pacing, writing, soundtrack and direction themes.
+✅ Compare high-, middle- and low-rating evidence.
+✅ Calculate and explain polarized rating distributions.
+✅ Link every observation to supporting original review identifiers and excerpts.
+✅ Keep spoiler-tagged review prose out of summaries.
+✅ Add a meaningful five-review minimum and honest insufficient-data state.
+✅ Cache summaries and refresh asynchronously after meaningful review changes.
+✅ Add an authorized, opt-in LangChainGo/OpenAI analyzer with deterministic fallback.
+✅ Build the accessible Plotlyst Debate tab, filters, chart and expandable evidence.
+
+**Outcome:** users can inspect why authentic Plotlyst reviewers agreed or disagreed, with every generated observation traceable to the community evidence that supports it.
+
+**Grounding boundary:** the default analyzer is deterministic and review-grounded. AI analysis is disabled unless the operator explicitly enables it, and then receives only non-spoiler reviews from members who opted into AI activity processing. Fewer than five reviews never produces a sentiment summary. See [`DEBATE_ANALYSIS_POLICY.md`](DEBATE_ANALYSIS_POLICY.md).
+
 ## Definition of done for every feature
 
 - Reachable through real navigation

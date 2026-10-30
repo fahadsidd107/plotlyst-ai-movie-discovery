@@ -16,6 +16,7 @@ tags:
   - name: Intelligence
   - name: Story DNA
   - name: Spoiler Firewall
+  - name: Debate
   - name: Specialist
 paths:
   /health/live:
@@ -152,6 +153,16 @@ paths:
       operationId: revealReviewOnce
       parameters: [{name: reviewId, in: path, required: true, schema: {type: string}}]
       responses: {'200': {description: Deliberately revealed review; never cache}, '404': {$ref: '#/components/responses/Error'}}
+  /api/debate/movies/{id}:
+    get:
+      tags: [Debate]
+      operationId: movieAudienceDebate
+      parameters:
+        - {$ref: '#/components/parameters/CatalogueID'}
+        - {name: rating_bucket, in: query, schema: {type: string, enum: [all, high, middle, low], default: all}}
+      responses:
+        '200': {description: Grounded community opinion analysis or an honest insufficient-data state, content: {application/json: {schema: {$ref: '#/components/schemas/DebateEnvelope'}}}}
+        '400': {$ref: '#/components/responses/Error'}
   /api/movie-night/rooms:
     post:
       security: [{cookieAuth: []}]
@@ -199,3 +210,6 @@ components:
     StoryDNADiscovery: {type: object, properties: {query: {type: string, maxLength: 800}, seed_movie_id: {type: integer, minimum: 1}, include_spoilers: {type: boolean, default: false}, weights: {type: object, properties: {mood: {type: number, minimum: 0}, pacing: {type: number, minimum: 0}, complexity: {type: number, minimum: 0}, structure: {type: number, minimum: 0}}}}}
     SpoilerPreferenceEnvelope: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/SpoilerPreference'}}}
     SpoilerPreference: {type: object, required: [mode], properties: {mode: {type: string, enum: [OFF, STANDARD, STRICT]}, updated_at: {type: string, format: date-time}}}
+    DebateEnvelope: {type: object, required: [data, source], properties: {data: {$ref: '#/components/schemas/DebateSummary'}, source: {type: object}}}
+    DebateSummary: {type: object, required: [movie_id, status, review_count, minimum_reviews, rating_distribution, loved, disliked, analysis_method], properties: {movie_id: {type: integer}, status: {type: string, enum: [available, stale, insufficient]}, review_count: {type: integer}, minimum_reviews: {type: integer, minimum: 5}, rating_distribution: {type: object, additionalProperties: {type: integer}}, polarization: {type: object}, loved: {type: array, items: {$ref: '#/components/schemas/DebateObservation'}}, disliked: {type: array, items: {$ref: '#/components/schemas/DebateObservation'}}, analysis_method: {type: string}, generated_at: {type: string, format: date-time}, new_reviews_pending: {type: integer}}}
+    DebateObservation: {type: object, required: [theme, summary, mention_count, evidence], properties: {theme: {type: string}, summary: {type: string}, mention_count: {type: integer}, evidence: {type: array, items: {type: object, required: [review_id, stars, spoiler_hidden], properties: {review_id: {type: string}, author_name: {type: string}, stars: {type: integer}, excerpt: {type: string}, spoiler_hidden: {type: boolean}, created_at: {type: string, format: date-time}}}}}}

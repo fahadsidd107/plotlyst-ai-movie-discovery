@@ -67,6 +67,7 @@ func main() {
 	routes.SetupSpecialistRoutes(router, client, tmdbClient, cfg)
 	routes.SetupIntelligenceRoutes(router, client, tmdbClient, cfg)
 	routes.SetupStoryDNARoutes(router, client, tmdbClient)
+	routes.SetupDebateRoutes(router, client, cfg)
 	routes.SetupProtectedRoutes(router, client)
 	routes.SetupCommunityRoutes(router, client)
 
