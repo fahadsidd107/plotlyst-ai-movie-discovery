@@ -18,7 +18,7 @@ import (
 	"plotlyst/server/tmdb"
 )
 
-const schemaVersion = 1
+const schemaVersion = 2
 
 type Service struct {
 	TMDB       *tmdb.Client
@@ -50,14 +50,16 @@ func (s *Service) Discover(ctx context.Context, req DiscoveryRequest) (Profile, 
 	seedID := req.SeedMovieID
 	query := strings.TrimSpace(req.Query)
 	if seedID == 0 && query != "" {
-		name := seedTitle(query)
 		var search tmdb.Page[tmdb.MovieSummary]
-		if err := s.TMDB.Get(ctx, "/search/movie", url.Values{"query": {name}}, &search); err != nil {
-			return Profile{}, nil, nil, err
+		if strings.Contains(strings.ToLower(query), "like ") {
+			if err := s.TMDB.Get(ctx, "/search/movie", url.Values{"query": {seedTitle(query)}}, &search); err != nil { return Profile{}, nil, nil, err }
+		} else {
+			filters:=url.Values{"sort_by":{"vote_count.desc"}}
+			if floor:=afterYear(query);floor>0{filters.Set("primary_release_date.gte",fmt.Sprintf("%d-01-01",floor+1))}
+			lower:=strings.ToLower(query);genreIDs:=[]string{};if strings.Contains(lower,"thriller"){genreIDs=append(genreIDs,"53")};if strings.Contains(lower,"psychological")||strings.Contains(lower,"mystery"){genreIDs=append(genreIDs,"9648")};if len(genreIDs)>0{filters.Set("with_genres",strings.Join(genreIDs,","))}
+			if err:=s.TMDB.Get(ctx,"/discover/movie",filters,&search);err!=nil{return Profile{},nil,nil,err}
 		}
-		if len(search.Results) > 0 {
-			seedID = search.Results[0].ID
-		}
+		if len(search.Results) > 0 { seedID = search.Results[0].ID }
 	}
 	if seedID == 0 {
 		return Profile{}, nil, nil, errors.New("choose a seed movie or describe a movie to compare")
@@ -73,6 +75,7 @@ func (s *Service) Discover(ctx context.Context, req DiscoveryRequest) (Profile, 
 	}
 	yearFloor := afterYear(query)
 	wantSimpler := strings.Contains(strings.ToLower(query), "simpler") || strings.Contains(strings.ToLower(query), "less complex")
+	wantNonlinear := strings.Contains(strings.ToLower(query), "nonlinear") || strings.Contains(strings.ToLower(query), "non-linear")
 	matches := make([]Match, 0, len(recommendations.Results))
 	for _, candidate := range recommendations.Results {
 		if candidate.ID == seedID {
@@ -85,6 +88,7 @@ func (s *Service) Discover(ctx context.Context, req DiscoveryRequest) (Profile, 
 		if wantSimpler && profile.Scores.Complexity >= seed.Scores.Complexity {
 			continue
 		}
+		if wantNonlinear && !contains(profile.Structures,"potentially-nonlinear") { continue }
 		match := Compare(seed, profile, req.Weights)
 		match.Profile = redact(profile, req.IncludeSpoilers)
 		matches = append(matches, match)
@@ -172,7 +176,7 @@ func classify(id int, title, poster string, releaseYear, runtime int, genres []i
 		dialogue = 68
 	}
 	now := time.Now().UTC()
-	return Profile{MovieID: id, Title: title, PosterPath: poster, ReleaseYear: releaseYear, Structures: unique(structures), Styles: unique(styles), Tones: unique(tones), Scores: Scores{clamp(warmth), clamp(tension), clamp(darkness), clamp(hope), clamp(pacing), clamp(complexity), clamp(visual), clamp(dialogue)}, Provenance: Provenance{Method: "deterministic-metadata-heuristic-v1", Source: "TMDB genre, runtime, release and vote metadata", Policy: "No TMDB plot text sent to AI; interpret as an inferred discovery aid.", Confidence: confidence(runtime, len(genres), vote), GeneratedAt: now, SchemaVersion: schemaVersion}, UpdatedAt: now}
+	return Profile{MovieID: id, Title: title, PosterPath: poster, ReleaseYear: releaseYear, Structures: unique(structures), Styles: unique(styles), Tones: unique(tones), Scores: Scores{clamp(warmth), clamp(tension), clamp(darkness), clamp(hope), clamp(pacing), clamp(complexity), clamp(visual), clamp(dialogue)}, Spoiler: SpoilerTraits{EndingShape: "unclassified", Resolution: "unclassified"}, Provenance: Provenance{Method: "deterministic-metadata-heuristic-v1", Source: "TMDB genre, runtime, release and vote metadata", Policy: "No TMDB plot text sent to AI; interpret as an inferred discovery aid.", Confidence: confidence(runtime, len(genres), vote), GeneratedAt: now, SchemaVersion: schemaVersion}, UpdatedAt: now}
 }
 
 func Compare(a, b Profile, w Weights) Match {
@@ -280,6 +284,7 @@ func intersection(a, b []string) []string {
 	}
 	return out
 }
+func contains(values []string,target string) bool { for _,value:=range values{if value==target{return true}};return false }
 func jaccard(a, b []string) float64 {
 	union := map[string]bool{}
 	for _, s := range a {

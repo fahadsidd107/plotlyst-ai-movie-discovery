@@ -13,7 +13,8 @@ func SetupCommunityRoutes(router *gin.Engine, client *mongo.Client) {
 	cc := controllers.NewCommunityController(client)
 	router.GET("/api/profiles/:username", cc.GetPublicProfile)
 	router.GET("/api/community/:mediaType/:mediaId/ratings", middleware.AuthMiddleWare(), cc.RatingSummary)
-	router.GET("/api/community/:mediaType/:mediaId/reviews", cc.ListReviews)
+	router.GET("/api/community/:mediaType/:mediaId/reviews", middleware.OptionalAuth(), cc.ListReviews)
+	router.GET("/api/community/reviews/:reviewId/reveal", middleware.OptionalAuth(), cc.RevealReview)
 
 	auth := router.Group("/api")
 	auth.Use(middleware.AuthMiddleWare())
@@ -22,6 +23,8 @@ func SetupCommunityRoutes(router *gin.Engine, client *mongo.Client) {
 	auth.GET("/me/profile", cc.GetMyProfile)
 	auth.PUT("/me/profile", cc.UpsertMyProfile)
 	auth.PUT("/me/settings", cc.UpsertMyProfile)
+	auth.GET("/me/spoiler-preferences", cc.GetSpoilerPreference)
+	auth.PUT("/me/spoiler-preferences", cc.PutSpoilerPreference)
 	auth.DELETE("/me/account", cc.DeleteAccount)
 	auth.PUT("/community/:mediaType/:mediaId/rating", cc.PutRating)
 	auth.DELETE("/community/:mediaType/:mediaId/rating", cc.DeleteRating)

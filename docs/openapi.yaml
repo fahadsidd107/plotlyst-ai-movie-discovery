@@ -15,6 +15,7 @@ tags:
   - name: Community
   - name: Intelligence
   - name: Story DNA
+  - name: Spoiler Firewall
   - name: Specialist
 paths:
   /health/live:
@@ -133,6 +134,24 @@ paths:
         '200': {description: Weighted and explainable narrative matches}
         '400': {$ref: '#/components/responses/Error'}
         '429': {$ref: '#/components/responses/Error'}
+  /api/me/spoiler-preferences:
+    get:
+      security: [{cookieAuth: []}]
+      tags: [Spoiler Firewall]
+      operationId: getSpoilerPreference
+      responses: {'200': {description: Current spoiler mode, content: {application/json: {schema: {$ref: '#/components/schemas/SpoilerPreferenceEnvelope'}}}}, '401': {$ref: '#/components/responses/Error'}}
+    put:
+      security: [{cookieAuth: []}]
+      tags: [Spoiler Firewall]
+      operationId: updateSpoilerPreference
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/SpoilerPreference'}}}}
+      responses: {'200': {description: Updated spoiler mode}, '400': {$ref: '#/components/responses/Error'}}
+  /api/community/reviews/{reviewId}/reveal:
+    get:
+      tags: [Spoiler Firewall]
+      operationId: revealReviewOnce
+      parameters: [{name: reviewId, in: path, required: true, schema: {type: string}}]
+      responses: {'200': {description: Deliberately revealed review; never cache}, '404': {$ref: '#/components/responses/Error'}}
   /api/movie-night/rooms:
     post:
       security: [{cookieAuth: []}]
@@ -178,3 +197,5 @@ components:
     StoryDNAEnvelope: {type: object, required: [data, source], properties: {data: {$ref: '#/components/schemas/StoryDNAProfile'}, source: {type: object}}}
     StoryDNAProfile: {type: object, required: [movie_id, title, structures, styles, tones, scores, provenance], properties: {movie_id: {type: integer}, title: {type: string}, poster_path: {type: string}, release_year: {type: integer}, structures: {type: array, items: {type: string}}, styles: {type: array, items: {type: string}}, tones: {type: array, items: {type: string}}, scores: {type: object, additionalProperties: {type: integer, minimum: 0, maximum: 100}}, spoiler_traits: {type: object}, provenance: {type: object}}}
     StoryDNADiscovery: {type: object, properties: {query: {type: string, maxLength: 800}, seed_movie_id: {type: integer, minimum: 1}, include_spoilers: {type: boolean, default: false}, weights: {type: object, properties: {mood: {type: number, minimum: 0}, pacing: {type: number, minimum: 0}, complexity: {type: number, minimum: 0}, structure: {type: number, minimum: 0}}}}}
+    SpoilerPreferenceEnvelope: {type: object, required: [data], properties: {data: {$ref: '#/components/schemas/SpoilerPreference'}}}
+    SpoilerPreference: {type: object, required: [mode], properties: {mode: {type: string, enum: [OFF, STANDARD, STRICT]}, updated_at: {type: string, format: date-time}}}

@@ -64,6 +64,8 @@ Its long-term direction includes real movie and television metadata, rich search
 - Production Docker images, Docker Compose, CI quality gates, Render and Vercel configuration
 - Story DNA narrative fingerprints with versioned provenance, bounded confidence and spoiler-safe traits
 - Adjustable, deterministic story-similarity discovery with grounded comparison explanations
+- Persistent OFF, STANDARD and STRICT spoiler protection enforced by the Go API
+- Progress-aware television descriptions and deliberate, accessible one-item spoiler reveals
 
 ## Architecture
 
@@ -166,6 +168,8 @@ As the domain grows, business rules will move behind handler → service → rep
 | `POST` | `/api/ai/memory-search` | Public; optional session | Search from a remembered scene or description |
 | `GET` | `/api/story-dna/movies/:id` | Public | Inferred narrative profile with confidence and provenance |
 | `POST` | `/api/story-dna/discover` | Public | Weighted, explainable story-similarity discovery |
+| `GET/PUT` | `/api/me/spoiler-preferences` | Authenticated | Read or update OFF, STANDARD or STRICT protection |
+| `GET` | `/api/community/reviews/:reviewId/reveal` | Public; deliberate action | Reveal one protected review without changing preference |
 | `GET` | `/api/analytics/cinema-dna` | Authenticated | Aggregate personal activity analytics |
 | `POST` | `/api/movie-night/rooms` | Authenticated | Create a collaborative room |
 | `POST` | `/api/movie-night/rooms/:code/join` | Authenticated | Join a room by code |
@@ -298,6 +302,8 @@ The TMDB catalogue adapter keeps provider credentials on the Go server and uses 
 Chart eligibility, formula, stable tie-breaking and live-snapshot limits are documented in [`docs/RANKING_METHODOLOGY.md`](docs/RANKING_METHODOLOGY.md). Franchise, editorial and user-list ownership boundaries are documented in [`docs/COLLECTION_TYPES.md`](docs/COLLECTION_TYPES.md).
 
 Story DNA classification, confidence, spoilers, deterministic weighting and the future authorized-AI seam are documented in [`docs/STORY_DNA_POLICY.md`](docs/STORY_DNA_POLICY.md).
+
+Server-side review redaction, progress-aware episode visibility, protection modes and the conservative AI-detection boundary are documented in [`docs/SPOILER_FIREWALL.md`](docs/SPOILER_FIREWALL.md).
 
 ## Build and validation
 

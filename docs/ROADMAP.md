@@ -114,6 +114,22 @@ This plan translates the master product brief into manageable vertical slices. A
 
 **Classification boundary:** the current classifier is a versioned, deterministic metadata heuristic derived from permitted TMDB genre, runtime, release and vote fields. Its confidence is deliberately capped and the interface labels it as an inferred discovery aid—not objective artistic truth. TMDB plot text is never sent to OpenAI. Ending traits remain unknown and spoiler-hidden until an authorized editorial or licensed classifier supplies them. See [`STORY_DNA_POLICY.md`](STORY_DNA_POLICY.md).
 
+## Step 9 — Spoiler Firewall
+
+✅ Add persistent OFF, STANDARD and STRICT protection preferences.
+✅ Add accessible account controls explaining each protection level.
+✅ Redact protected reviews and comments server-side before delivery.
+✅ Preserve author spoiler tags and source/confidence metadata.
+✅ Add keyboard-accessible, deliberate, one-item reveal controls.
+✅ Protect movie/television synopses, discovery previews and recommendations in Strict mode.
+✅ Use server-owned episode progress to conceal future episode descriptions.
+✅ Prevent protected AI Desk overview text from leaking in Strict mode.
+✅ Document the conservative moderation and authorized-AI boundary.
+
+**Outcome:** members can browse community and catalogue surfaces using a persistent protection level, with episode visibility grounded in their watched progress and every reveal remaining explicit.
+
+**Detection boundary:** review authors supply the current spoiler label. Strict mode conservatively conceals even untagged community prose because automated detection cannot guarantee safety. AI spoiler detection remains intentionally disabled until review text is authorized for model processing and a moderation-review workflow, retention policy and confidence threshold are configured. See [`SPOILER_FIREWALL.md`](SPOILER_FIREWALL.md).
+
 ## Definition of done for every feature
 
 - Reachable through real navigation

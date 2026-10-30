@@ -6,11 +6,11 @@ export const imageUrl = (meta, path, size = 'w500') => {
   return `${base}/${size}${path}`;
 };
 export const getMovies = (page = 1, collection = 'trending') => axiosClient.get('/api/catalog/movies', { params: { page, collection } });
-export const getMovie = (id) => axiosClient.get(`/api/catalog/movies/${id}`);
+export const getMovie = (id, reveal = false) => axiosClient.get(`/api/catalog/movies/${id}`, { params: reveal ? { reveal_spoilers: true } : {} });
 export const getTV = (page = 1, collection = 'trending') => axiosClient.get('/api/catalog/tv', { params: { page, collection } });
-export const getTVDetail = (id) => axiosClient.get(`/api/catalog/tv/${id}`);
-export const getSeason = (id, season) => axiosClient.get(`/api/catalog/tv/${id}/seasons/${season}`);
-export const getEpisode = (id, season, episode) => axiosClient.get(`/api/catalog/tv/${id}/seasons/${season}/episodes/${episode}`);
+export const getTVDetail = (id, reveal = false) => axiosClient.get(`/api/catalog/tv/${id}`, { params: reveal ? { reveal_spoilers: true } : {} });
+export const getSeason = (id, season, reveal = false) => axiosClient.get(`/api/catalog/tv/${id}/seasons/${season}`, { params: reveal ? { reveal_spoilers: true } : {} });
+export const getEpisode = (id, season, episode, reveal = false) => axiosClient.get(`/api/catalog/tv/${id}/seasons/${season}/episodes/${episode}`, { params: reveal ? { reveal_spoilers: true } : {} });
 export const getPeople = (page = 1) => axiosClient.get('/api/catalog/people/trending', { params: { page } });
 export const getBornToday = () => axiosClient.get('/api/catalog/people/born-today', { params: { timezone: 'Europe/Berlin' } });
 export const getPerson = (id) => axiosClient.get(`/api/catalog/people/${id}`);

@@ -3,10 +3,12 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 	"plotlyst/server/controllers"
+	"plotlyst/server/middleware"
 )
 
 func SetupCatalogRoutes(router *gin.Engine, catalog *controllers.CatalogController) {
 	api := router.Group("/api/catalog")
+	api.Use(middleware.OptionalAuth())
 	api.GET("/movies", catalog.ListMovies)
 	api.GET("/movies/:id", catalog.Movie)
 	api.GET("/tv", catalog.ListTV)
@@ -19,6 +21,7 @@ func SetupCatalogRoutes(router *gin.Engine, catalog *controllers.CatalogControll
 	api.GET("/search", catalog.Search)
 	discovery := controllers.NewDiscoveryController(catalog)
 	d := router.Group("/api/discovery")
+	d.Use(middleware.OptionalAuth())
 	d.GET("/home", discovery.Home)
 	d.GET("/home/:section", discovery.HomeSection)
 	d.GET("/search", discovery.Search)

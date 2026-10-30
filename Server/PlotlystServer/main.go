@@ -18,6 +18,7 @@ import (
 	"plotlyst/server/database"
 	"plotlyst/server/middleware"
 	"plotlyst/server/routes"
+	"plotlyst/server/spoiler"
 	"plotlyst/server/tmdb"
 )
 
@@ -61,7 +62,8 @@ func main() {
 	})
 	routes.SetupUnProtectedRoutes(router, client)
 	tmdbClient := tmdb.New(cfg.TMDBBaseURL, cfg.TMDBAPIKey, cfg.TMDBTimeout, cfg.TMDBCacheTTL, cfg.TMDBMaxRetries)
-	routes.SetupCatalogRoutes(router, controllers.NewCatalogController(tmdbClient, cfg.TMDBImageBaseURL))
+	spoilerService := &spoiler.Service{Preferences: database.OpenCollection("spoiler_preferences", client), Progress: database.OpenCollection("episode_progress", client)}
+	routes.SetupCatalogRoutes(router, controllers.NewCatalogController(tmdbClient, cfg.TMDBImageBaseURL, spoilerService))
 	routes.SetupSpecialistRoutes(router, client, tmdbClient, cfg)
 	routes.SetupIntelligenceRoutes(router, client, tmdbClient, cfg)
 	routes.SetupStoryDNARoutes(router, client, tmdbClient)

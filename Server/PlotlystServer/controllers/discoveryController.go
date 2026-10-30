@@ -57,6 +57,11 @@ func (h *DiscoveryController) Home(c *gin.Context) {
 		}()
 	}
 	wg.Wait()
+	if h.catalog.mode(c) == "STRICT" {
+		for i := range sections {
+			protectMedia(sections[i].Results)
+		}
+	}
 	h.catalog.respond(c, gin.H{"generated_at": time.Now().UTC(), "sections": sections})
 }
 
@@ -73,6 +78,9 @@ func (h *DiscoveryController) HomeSection(c *gin.Context) {
 	var page tmdb.Page[tmdb.MediaSummary]
 	if !h.catalog.fetch(c, definition.path, listQuery(c), &page) {
 		return
+	}
+	if h.catalog.mode(c) == "STRICT" {
+		protectMedia(page.Results)
 	}
 	h.catalog.respond(c, homeSection{Key: section, Title: definition.title, MediaType: definition.media, Results: page.Results})
 }
@@ -95,6 +103,9 @@ func (h *DiscoveryController) Search(c *gin.Context) {
 		}
 	}
 	page.Results = filtered
+	if h.catalog.mode(c) == "STRICT" {
+		protectMedia(page.Results)
+	}
 	h.catalog.respond(c, page)
 }
 
@@ -153,6 +164,9 @@ func (h *DiscoveryController) discover(c *gin.Context, media string) {
 	if !h.catalog.fetch(c, "/discover/"+media, q, &page) {
 		return
 	}
+	if h.catalog.mode(c) == "STRICT" {
+		protectMedia(page.Results)
+	}
 	h.catalog.respond(c, page)
 }
 
@@ -177,6 +191,9 @@ func (h *DiscoveryController) Chart(c *gin.Context) {
 	var page tmdb.Page[tmdb.MediaSummary]
 	if !h.catalog.fetch(c, "/discover/"+media, q, &page) {
 		return
+	}
+	if h.catalog.mode(c) == "STRICT" {
+		protectMedia(page.Results)
 	}
 	items := make([]chartItem, 0, len(page.Results))
 	for _, item := range page.Results {
@@ -211,6 +228,10 @@ func (h *DiscoveryController) Collection(c *gin.Context) {
 	}
 	if !h.catalog.fetch(c, "/collection/"+c.Param("id"), nil, &out) {
 		return
+	}
+	if h.catalog.mode(c) == "STRICT" {
+		out.Overview = ""
+		protectMedia(out.Parts)
 	}
 	h.catalog.respond(c, gin.H{"kind": "official_franchise", "ownership": "TMDB collection", "collection": out})
 }

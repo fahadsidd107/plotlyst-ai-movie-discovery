@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { imageUrl } from '../../api/catalog';
 import useCatalog from '../../hooks/useCatalog';
@@ -6,10 +7,12 @@ import LoadingScreen from '../ui/LoadingScreen';
 import { ErrorState } from '../ui/States';
 import CommunityPanel from '../community/CommunityPanel';
 import StoryDnaPanel from '../storyDna/StoryDnaPanel';
+import SpoilerCurtain from '../ui/SpoilerCurtain';
 
 const DetailPage = ({ type, loader }) => {
   const { id } = useParams();
-  const { data: item, meta, loading, error, retry } = useCatalog(() => loader(id), [id]);
+  const [revealSpoilers,setRevealSpoilers]=useState(false);
+  const { data: item, meta, loading, error, retry } = useCatalog(() => loader(id,revealSpoilers), [id,revealSpoilers]);
   if (loading) return <LoadingScreen compact />;
   if (error) return <div className="page-shell content-section"><ErrorState message={error} onRetry={retry} /></div>;
   const title = item.title || item.name;
@@ -32,7 +35,7 @@ const DetailPage = ({ type, loader }) => {
         {item.poster_path && <img src={imageUrl(meta, item.poster_path)} alt={`${title} poster`} />}
         <div><p className="eyebrow">{type === 'movie' ? 'Feature presentation' : 'On the small screen'}</p><h1>{title}</h1>
           <p className="detail-facts">{[(item.release_date || item.first_air_date || '').slice(0, 4), item.runtime ? `${item.runtime} min` : item.number_of_seasons ? `${item.number_of_seasons} seasons` : null, item.vote_average ? `★ ${item.vote_average.toFixed(1)}` : null].filter(Boolean).join(' · ')}</p>
-          <div className="genre-row">{item.genres?.map(genre => <span key={genre.id}>{genre.name}</span>)}</div><p className="detail-overview">{item.overview}</p></div>
+          <div className="genre-row">{item.genres?.map(genre => <span key={genre.id}>{genre.name}</span>)}</div>{item.spoiler_hidden&&!item.overview?<SpoilerCurtain label="Synopsis and tagline" onReveal={()=>setRevealSpoilers(true)}/>:<p className="detail-overview">{item.overview}</p>}</div>
       </div>
     </header>
     <div className="page-shell detail-flow">

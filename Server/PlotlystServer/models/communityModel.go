@@ -50,19 +50,23 @@ type Rating struct {
 }
 
 type Review struct {
-	ID           bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	UserID       string        `json:"user_id" bson:"user_id"`
-	AuthorName   string        `json:"author_name" bson:"author_name"`
-	MediaRef     `bson:",inline"`
-	ParentID     *bson.ObjectID `json:"parent_id,omitempty" bson:"parent_id,omitempty"`
-	Title        string         `json:"title" bson:"title"`
-	Body         string         `json:"body" bson:"body"`
-	Spoiler      bool           `json:"spoiler" bson:"spoiler"`
-	Status       string         `json:"status" bson:"status"`
-	HelpfulCount int64          `json:"helpful_count" bson:"helpful_count"`
-	CreatedAt    time.Time      `json:"created_at" bson:"created_at"`
-	UpdatedAt    time.Time      `json:"updated_at" bson:"updated_at"`
-	DeletedAt    *time.Time     `json:"deleted_at,omitempty" bson:"deleted_at,omitempty"`
+	ID                bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	UserID            string        `json:"user_id" bson:"user_id"`
+	AuthorName        string        `json:"author_name" bson:"author_name"`
+	MediaRef          `bson:",inline"`
+	ParentID          *bson.ObjectID `json:"parent_id,omitempty" bson:"parent_id,omitempty"`
+	Title             string         `json:"title" bson:"title"`
+	Body              string         `json:"body" bson:"body"`
+	Spoiler           bool           `json:"spoiler" bson:"spoiler"`
+	SpoilerSource     string         `json:"spoiler_source,omitempty" bson:"spoiler_source,omitempty"`
+	SpoilerConfidence float64        `json:"spoiler_confidence,omitempty" bson:"spoiler_confidence,omitempty"`
+	SpoilerHidden     bool           `json:"spoiler_hidden,omitempty" bson:"-"`
+	SpoilerReason     string         `json:"spoiler_reason,omitempty" bson:"-"`
+	Status            string         `json:"status" bson:"status"`
+	HelpfulCount      int64          `json:"helpful_count" bson:"helpful_count"`
+	CreatedAt         time.Time      `json:"created_at" bson:"created_at"`
+	UpdatedAt         time.Time      `json:"updated_at" bson:"updated_at"`
+	DeletedAt         *time.Time     `json:"deleted_at,omitempty" bson:"deleted_at,omitempty"`
 }
 
 type LibraryItem struct {

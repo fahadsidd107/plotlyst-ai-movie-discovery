@@ -15,13 +15,17 @@ import (
 	"plotlyst/server/apiresponse"
 	"plotlyst/server/database"
 	"plotlyst/server/models"
+	"plotlyst/server/spoiler"
 	"plotlyst/server/utils"
 )
 
-type CommunityController struct{ client *mongo.Client }
+type CommunityController struct {
+	client   *mongo.Client
+	spoilers *spoiler.Service
+}
 
 func NewCommunityController(client *mongo.Client) *CommunityController {
-	return &CommunityController{client: client}
+	return &CommunityController{client: client, spoilers: &spoiler.Service{Preferences: database.OpenCollection("spoiler_preferences", client), Progress: database.OpenCollection("episode_progress", client)}}
 }
 func (cc *CommunityController) collection(name string) *mongo.Collection {
 	return database.OpenCollection(name, cc.client)
@@ -132,7 +136,7 @@ func (cc *CommunityController) DeleteAccount(c *gin.Context) {
 	for _, entry := range []struct {
 		name   string
 		filter bson.M
-	}{{"profiles", bson.M{"user_id": uid}}, {"ratings", bson.M{"user_id": uid}}, {"reviews", bson.M{"user_id": uid}}, {"review_votes", bson.M{"user_id": uid}}, {"review_reports", bson.M{"reporter_user_id": uid}}, {"watchlist_items", bson.M{"user_id": uid}}, {"watch_history", bson.M{"user_id": uid}}, {"episode_progress", bson.M{"user_id": uid}}, {"playlists", bson.M{"owner_user_id": uid}}, {"ai_privacy", bson.M{"user_id": uid}}, {"movie_nights", bson.M{"owner_id": uid}}} {
+	}{{"profiles", bson.M{"user_id": uid}}, {"ratings", bson.M{"user_id": uid}}, {"reviews", bson.M{"user_id": uid}}, {"review_votes", bson.M{"user_id": uid}}, {"review_reports", bson.M{"reporter_user_id": uid}}, {"watchlist_items", bson.M{"user_id": uid}}, {"watch_history", bson.M{"user_id": uid}}, {"episode_progress", bson.M{"user_id": uid}}, {"playlists", bson.M{"owner_user_id": uid}}, {"ai_privacy", bson.M{"user_id": uid}}, {"spoiler_preferences", bson.M{"user_id": uid}}, {"movie_nights", bson.M{"owner_id": uid}}} {
 		_, _ = cc.collection(entry.name).DeleteMany(ctx, entry.filter)
 	}
 	_, err := cc.collection("users").DeleteOne(ctx, bson.M{"user_id": uid})
@@ -274,7 +278,66 @@ func (cc *CommunityController) ListReviews(c *gin.Context) {
 	defer cur.Close(ctx)
 	rows := []models.Review{}
 	cur.All(ctx, &rows)
+	mode := cc.spoilers.Get(ctx, c.GetString("userId")).Mode
+	for index := range rows {
+		if spoiler.ConcealReview(mode, rows[index].Spoiler) {
+			rows[index].Body = ""
+			rows[index].Title = ""
+			rows[index].SpoilerHidden = true
+			if mode == spoiler.ModeStrict && !rows[index].Spoiler {
+				rows[index].SpoilerReason = "Strict protection conceals unreviewed community prose."
+			} else {
+				rows[index].SpoilerReason = "This review is tagged as containing spoilers."
+			}
+		}
+	}
 	c.JSON(200, gin.H{"data": rows})
+}
+
+func (cc *CommunityController) RevealReview(c *gin.Context) {
+	id, err := bson.ObjectIDFromHex(c.Param("reviewId"))
+	if err != nil {
+		apiresponse.Error(c, 400, "invalid_review", "Review identifier is invalid")
+		return
+	}
+	ctx, cancel := requestContext(c)
+	defer cancel()
+	var review models.Review
+	if cc.collection("reviews").FindOne(ctx, bson.M{"_id": id, "status": "VISIBLE", "deleted_at": nil}).Decode(&review) != nil {
+		apiresponse.Error(c, 404, "review_not_found", "Review not found")
+		return
+	}
+	c.Header("Cache-Control", "no-store")
+	c.JSON(200, gin.H{"data": review, "warning": "You deliberately revealed spoiler-sensitive community content."})
+}
+
+func (cc *CommunityController) GetSpoilerPreference(c *gin.Context) {
+	ctx, cancel := requestContext(c)
+	defer cancel()
+	c.JSON(200, gin.H{"data": cc.spoilers.Get(ctx, c.GetString("userId"))})
+}
+
+func (cc *CommunityController) PutSpoilerPreference(c *gin.Context) {
+	var body struct {
+		Mode string `json:"mode"`
+	}
+	if c.ShouldBindJSON(&body) != nil {
+		apiresponse.Error(c, 400, "invalid_spoiler_mode", "Choose OFF, STANDARD, or STRICT")
+		return
+	}
+	upper := strings.ToUpper(strings.TrimSpace(body.Mode))
+	if upper != spoiler.ModeOff && upper != spoiler.ModeStandard && upper != spoiler.ModeStrict {
+		apiresponse.Error(c, 400, "invalid_spoiler_mode", "Choose OFF, STANDARD, or STRICT")
+		return
+	}
+	ctx, cancel := requestContext(c)
+	defer cancel()
+	preference, err := cc.spoilers.Put(ctx, c.GetString("userId"), upper)
+	if err != nil {
+		apiresponse.Error(c, 500, "database_error", "Unable to save spoiler preference")
+		return
+	}
+	c.JSON(200, gin.H{"data": preference})
 }
 func (cc *CommunityController) CreateReview(c *gin.Context) {
 	ref, ok := parseMedia(c)
@@ -297,6 +360,10 @@ func (cc *CommunityController) CreateReview(c *gin.Context) {
 		return
 	}
 	body.Status = "VISIBLE"
+	if body.Spoiler {
+		body.SpoilerSource = "USER"
+		body.SpoilerConfidence = 1
+	}
 	body.CreatedAt = time.Now().UTC()
 	body.UpdatedAt = body.CreatedAt
 	ctx, cancel := requestContext(c)
@@ -331,6 +398,10 @@ func (cc *CommunityController) CreateReply(c *gin.Context) {
 		return
 	}
 	reply := models.Review{ID: bson.NewObjectID(), UserID: uid, MediaRef: root.MediaRef, ParentID: &parent, Body: cleanText(body.Body, 2000), Spoiler: body.Spoiler, Status: "VISIBLE", CreatedAt: time.Now().UTC(), UpdatedAt: time.Now().UTC()}
+	if reply.Spoiler {
+		reply.SpoilerSource = "USER"
+		reply.SpoilerConfidence = 1
+	}
 	if len([]rune(reply.Body)) < 2 {
 		apiresponse.Error(c, 400, "reply_too_short", "Reply is too short")
 		return
@@ -356,7 +427,13 @@ func (cc *CommunityController) UpdateReview(c *gin.Context) {
 	}
 	ctx, cancel := requestContext(c)
 	defer cancel()
-	result, _ := cc.collection("reviews").UpdateOne(ctx, bson.M{"_id": id, "user_id": uid, "deleted_at": nil}, bson.M{"$set": bson.M{"title": cleanText(body.Title, 120), "body": cleanText(body.Body, 5000), "spoiler": body.Spoiler, "updated_at": time.Now().UTC()}})
+	spoilerSource := ""
+	confidence := 0.0
+	if body.Spoiler {
+		spoilerSource = "USER"
+		confidence = 1
+	}
+	result, _ := cc.collection("reviews").UpdateOne(ctx, bson.M{"_id": id, "user_id": uid, "deleted_at": nil}, bson.M{"$set": bson.M{"title": cleanText(body.Title, 120), "body": cleanText(body.Body, 5000), "spoiler": body.Spoiler, "spoiler_source": spoilerSource, "spoiler_confidence": confidence, "updated_at": time.Now().UTC()}})
 	if result.MatchedCount == 0 {
 		apiresponse.Error(c, 404, "review_not_found", "Review was not found or is not yours")
 		return

@@ -12,16 +12,18 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"plotlyst/server/apiresponse"
+	"plotlyst/server/spoiler"
 	"plotlyst/server/tmdb"
 )
 
 type CatalogController struct {
 	client       *tmdb.Client
 	imageBaseURL string
+	spoilers     *spoiler.Service
 }
 
-func NewCatalogController(client *tmdb.Client, imageBaseURL string) *CatalogController {
-	return &CatalogController{client: client, imageBaseURL: strings.TrimRight(imageBaseURL, "/")}
+func NewCatalogController(client *tmdb.Client, imageBaseURL string, spoilers *spoiler.Service) *CatalogController {
+	return &CatalogController{client: client, imageBaseURL: strings.TrimRight(imageBaseURL, "/"), spoilers: spoilers}
 }
 
 func (h *CatalogController) ListMovies(c *gin.Context) {
@@ -57,6 +59,12 @@ func (h *CatalogController) Movie(c *gin.Context) {
 	if !h.fetch(c, "/movie/"+c.Param("id"), q, &out) {
 		return
 	}
+	if h.mode(c) == spoiler.ModeStrict && c.Query("reveal_spoilers") != "true" {
+		out.Overview = ""
+		out.Tagline = ""
+		out.SpoilerHidden = true
+		protectMedia(out.Recommendations.Results)
+	}
 	h.respond(c, out)
 }
 func (h *CatalogController) TV(c *gin.Context) {
@@ -67,6 +75,12 @@ func (h *CatalogController) TV(c *gin.Context) {
 	q := url.Values{"append_to_response": {"credits,recommendations,watch/providers,content_ratings"}}
 	if !h.fetch(c, "/tv/"+c.Param("id"), q, &out) {
 		return
+	}
+	if h.mode(c) == spoiler.ModeStrict && c.Query("reveal_spoilers") != "true" {
+		out.Overview = ""
+		out.Tagline = ""
+		out.SpoilerHidden = true
+		protectMedia(out.Recommendations.Results)
 	}
 	h.respond(c, out)
 }
@@ -79,6 +93,17 @@ func (h *CatalogController) Season(c *gin.Context) {
 	if !h.fetch(c, fmt.Sprintf("/tv/%s/season/%s", c.Param("id"), c.Param("season")), q, &out) {
 		return
 	}
+	if c.Query("reveal_spoilers") != "true" {
+		show, _ := strconv.Atoi(c.Param("id"))
+		season, _ := strconv.Atoi(c.Param("season"))
+		mode := h.mode(c)
+		for i := range out.Episodes {
+			if !h.spoilers.EpisodeVisible(c.Request.Context(), c.GetString("userId"), mode, show, season, out.Episodes[i].EpisodeNumber) {
+				out.Episodes[i].Overview = ""
+				out.Episodes[i].SpoilerHidden = true
+			}
+		}
+	}
 	h.respond(c, out)
 }
 func (h *CatalogController) Episode(c *gin.Context) {
@@ -90,7 +115,29 @@ func (h *CatalogController) Episode(c *gin.Context) {
 	if !h.fetch(c, fmt.Sprintf("/tv/%s/season/%s/episode/%s", c.Param("id"), c.Param("season"), c.Param("episode")), q, &out) {
 		return
 	}
+	if c.Query("reveal_spoilers") != "true" {
+		show, _ := strconv.Atoi(c.Param("id"))
+		season, _ := strconv.Atoi(c.Param("season"))
+		episode, _ := strconv.Atoi(c.Param("episode"))
+		if !h.spoilers.EpisodeVisible(c.Request.Context(), c.GetString("userId"), h.mode(c), show, season, episode) {
+			out.Overview = ""
+			out.SpoilerHidden = true
+		}
+	}
 	h.respond(c, out)
+}
+
+func (h *CatalogController) mode(c *gin.Context) string {
+	if h.spoilers == nil {
+		return spoiler.ModeStandard
+	}
+	return h.spoilers.Get(c.Request.Context(), c.GetString("userId")).Mode
+}
+func protectMedia(items []tmdb.MediaSummary) {
+	for i := range items {
+		items[i].Overview = ""
+		items[i].SpoilerHidden = true
+	}
 }
 func (h *CatalogController) TrendingPeople(c *gin.Context) {
 	var out tmdb.Page[tmdb.PersonSummary]

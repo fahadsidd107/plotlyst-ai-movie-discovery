@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
-import { apiMessage, communityApi, libraryApi } from '../../api/step4';
+import { apiMessage, communityApi, libraryApi, spoilerApi } from '../../api/step4';
+import SpoilerCurtain from '../ui/SpoilerCurtain';
 import StarRating from './StarRating';
 
 const authorName = review => review.author?.username || review.author_name || review.username || 'Plotlyst member';
@@ -15,6 +16,7 @@ export default function CommunityPanel({ mediaType, mediaId, title, posterPath }
   const load = useCallback(async () => { setStatus('loading'); try { const [r, v] = await Promise.all([communityApi.ratings(mediaType, mediaId), communityApi.reviews(mediaType, mediaId)]); setRatings(r); setReviews(v.results || v.reviews || v || []); setStatus('ready'); } catch (error) { setNotice(apiMessage(error)); setStatus('error'); } }, [mediaId, mediaType]);
   useEffect(() => { load(); }, [load]);
   const act = async (action, success) => { try { setNotice(''); await action(); setNotice(success); await load(); } catch (error) { setNotice(apiMessage(error)); } };
+  const revealReview=async id=>{try{const review=await spoilerApi.revealReview(id);setReviews(current=>current.map(item=>reviewId(item)===id?review:item));setRevealed(current=>({...current,[id]:true}))}catch(error){setNotice(apiMessage(error))}};
   const submit = event => { event.preventDefault(); if (!body.trim()) return; act(() => communityApi.createReview(mediaType, mediaId, { body: body.trim(), spoiler }), 'Programme note published.'); setBody(''); setSpoiler(false); };
   const addWatchlist = () => act(() => libraryApi.watchlistAdd({ media_type: mediaType, media_id: Number(mediaId), title, poster_path: posterPath }), 'Saved to your private watchlist.');
   return <section className="community-section" aria-labelledby="community-title">
@@ -30,9 +32,9 @@ export default function CommunityPanel({ mediaType, mediaId, title, posterPath }
       <div className="section-heading"><div><p className="eyebrow">Programme notes</p><h3>{reviews.length ? `${reviews.length} member reviews` : 'The first note is yours'}</h3></div></div>
       {status === 'loading' && <p className="thread-state">Fetching notes from the archive…</p>}
       {status === 'error' && <button className="archive-action" onClick={load}>Retry community notes</button>}
-      {status === 'ready' && reviews.map(review => { const id = reviewId(review); const hidden = review.spoiler && !revealed[id]; return <article className={`review-note${hidden ? ' review-note--spoiler' : ''}`} key={id}>
+      {status === 'ready' && reviews.map(review => { const id = reviewId(review); const hidden = (review.spoiler_hidden || review.spoiler) && !revealed[id]; return <article className={`review-note${hidden ? ' review-note--spoiler' : ''}`} key={id}>
         <header><div className="avatar-stub">{authorName(review).slice(0, 1).toUpperCase()}</div><div><Link to={`/profile/${authorName(review)}`}>@{authorName(review)}</Link><small>{review.created_at ? new Date(review.created_at).toLocaleDateString() : 'Recently'} · {review.rating ? `${review.rating}/5` : 'Unrated'}</small></div></header>
-        {hidden ? <button className="spoiler-gate" onClick={() => setRevealed(current => ({...current, [id]: true}))}><b>Spoiler curtain</b><span>Reveal this programme note</span></button> : <p>{review.body || review.content}</p>}
+        {hidden ? <SpoilerCurtain label="Community review" reason={review.spoiler_reason} onReveal={()=>review.spoiler_hidden?revealReview(id):setRevealed(current=>({...current,[id]:true}))}/> : <p>{review.body || review.content}</p>}
         <footer><button onClick={() => act(() => communityApi.helpful(id), 'Marked as helpful.')}>♡ Helpful {review.helpful_count || 0}</button>{auth && <button onClick={() => { const reply = window.prompt('Write a reply'); if (reply?.trim()) act(() => communityApi.reply(id, reply.trim()), 'Reply added.'); }}>Reply</button>}{auth && <button onClick={() => { const reason = window.prompt('Why are you reporting this review?'); if (reason?.trim()) act(() => communityApi.report(id, reason.trim()), 'Report sent privately to moderators.'); }}>Report</button>}{auth?.user_id === (review.user_id || review.author?.id) && <button onClick={() => act(() => communityApi.deleteReview(id), 'Review removed.')}>Delete</button>}</footer>
         {review.replies?.map(reply => <div className="review-reply" key={reply.id || reply._id}><b>@{authorName(reply)}</b><p>{reply.body || reply.content}</p></div>)}
       </article>; })}

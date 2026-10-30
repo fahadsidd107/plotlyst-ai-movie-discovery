@@ -64,6 +64,7 @@ type MediaSummary struct {
 	VoteAverage        float64 `json:"vote_average"`
 	VoteCount          int     `json:"vote_count"`
 	Popularity         float64 `json:"popularity"`
+	SpoilerHidden      bool    `json:"spoiler_hidden,omitempty"`
 }
 type MovieSummary struct {
 	ID            int     `json:"id"`
@@ -141,17 +142,19 @@ type MovieDetail struct {
 	ReleaseDates        ReleaseDates       `json:"release_dates"`
 	Recommendations     Page[MediaSummary] `json:"recommendations"`
 	WatchProviders      WatchProviders     `json:"watch/providers"`
+	SpoilerHidden       bool               `json:"spoiler_hidden,omitempty"`
 }
 
 type SeasonSummary struct {
-	ID           int     `json:"id"`
-	Name         string  `json:"name"`
-	Overview     string  `json:"overview"`
-	AirDate      string  `json:"air_date"`
-	EpisodeCount int     `json:"episode_count"`
-	PosterPath   string  `json:"poster_path"`
-	SeasonNumber int     `json:"season_number"`
-	VoteAverage  float64 `json:"vote_average"`
+	ID            int     `json:"id"`
+	Name          string  `json:"name"`
+	Overview      string  `json:"overview"`
+	AirDate       string  `json:"air_date"`
+	EpisodeCount  int     `json:"episode_count"`
+	PosterPath    string  `json:"poster_path"`
+	SeasonNumber  int     `json:"season_number"`
+	VoteAverage   float64 `json:"vote_average"`
+	SpoilerHidden bool    `json:"spoiler_hidden,omitempty"`
 }
 type TVDetail struct {
 	ID                  int                `json:"id"`
@@ -178,6 +181,7 @@ type TVDetail struct {
 	Recommendations     Page[MediaSummary] `json:"recommendations"`
 	WatchProviders      WatchProviders     `json:"watch/providers"`
 	ContentRatings      ContentRatings     `json:"content_ratings"`
+	SpoilerHidden       bool               `json:"spoiler_hidden,omitempty"`
 }
 
 type EpisodeSummary struct {
@@ -192,6 +196,7 @@ type EpisodeSummary struct {
 	VoteAverage   float64  `json:"vote_average"`
 	Crew          []Credit `json:"crew"`
 	GuestStars    []Credit `json:"guest_stars"`
+	SpoilerHidden bool     `json:"spoiler_hidden,omitempty"`
 }
 type SeasonDetail struct {
 	ID           int              `json:"id"`

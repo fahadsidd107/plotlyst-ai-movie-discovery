@@ -21,6 +21,12 @@ export const profileApi = {
   deleteAccount: confirmation => request('delete', '/api/me/account', { confirmation }),
 };
 
+export const spoilerApi = {
+  get: () => request('get', '/api/me/spoiler-preferences'),
+  update: mode => request('put', '/api/me/spoiler-preferences', { mode }),
+  revealReview: id => request('get', `/api/community/reviews/${id}/reveal`),
+};
+
 export const communityApi = {
   ratings: (type, id) => request('get', `/api/community/${type}/${id}/ratings`),
   reviews: (type, id) => request('get', `/api/community/${type}/${id}/reviews`),

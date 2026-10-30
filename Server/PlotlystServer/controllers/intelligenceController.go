@@ -16,6 +16,7 @@ import (
 	"plotlyst/server/apiresponse"
 	"plotlyst/server/database"
 	"plotlyst/server/intelligence"
+	"plotlyst/server/spoiler"
 )
 
 type IntelligenceController struct {
@@ -56,6 +57,16 @@ func (h *IntelligenceController) Discover(mode string) gin.HandlerFunc {
 		if err != nil {
 			apiresponse.Error(c, 400, "discovery_failed", err.Error())
 			return
+		}
+		var spoilerPreference struct {
+			Mode string `bson:"mode"`
+		}
+		_ = h.col("spoiler_preferences").FindOne(c.Request.Context(), bson.M{"user_id": c.GetString("userId")}).Decode(&spoilerPreference)
+		if spoiler.Normalize(spoilerPreference.Mode) == spoiler.ModeStrict {
+			for index := range out.Items {
+				out.Items[index].Overview = ""
+				out.Items[index].Reasons = append(out.Items[index].Reasons, "Preview concealed by Strict spoiler protection.")
+			}
 		}
 		if b.Consent {
 			var privacy aiPrivacy
