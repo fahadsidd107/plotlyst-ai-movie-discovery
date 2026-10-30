@@ -66,6 +66,8 @@ Its long-term direction includes real movie and television metadata, rich search
 - Adjustable, deterministic story-similarity discovery with grounded comparison explanations
 - Persistent OFF, STANDARD and STRICT spoiler protection enforced by the Go API
 - Progress-aware television descriptions and deliberate, accessible one-item spoiler reveals
+- Plotlyst Debate audience analysis grounded in real reviews, ratings and linked evidence
+- Honest five-review minimums, polarization metrics and cached background recounts
 
 ## Architecture
 
@@ -170,6 +172,7 @@ As the domain grows, business rules will move behind handler → service → rep
 | `POST` | `/api/story-dna/discover` | Public | Weighted, explainable story-similarity discovery |
 | `GET/PUT` | `/api/me/spoiler-preferences` | Authenticated | Read or update OFF, STANDARD or STRICT protection |
 | `GET` | `/api/community/reviews/:reviewId/reveal` | Public; deliberate action | Reveal one protected review without changing preference |
+| `GET` | `/api/debate/movies/:id` | Public | Grounded loved/disliked themes, rating distribution and evidence |
 | `GET` | `/api/analytics/cinema-dna` | Authenticated | Aggregate personal activity analytics |
 | `POST` | `/api/movie-night/rooms` | Authenticated | Create a collaborative room |
 | `POST` | `/api/movie-night/rooms/:code/join` | Authenticated | Join a room by code |
@@ -239,6 +242,7 @@ AI_MAX_INPUT_CHARS=800
 AI_MAX_OUTPUT_TOKENS=350
 AI_DAILY_USER_BUDGET=20
 AI_CACHE_TTL=30m
+DEBATE_AI_ENABLED=false
 OPUSDATA_API_KEY=
 OPUSDATA_BASE_URL=
 OPUSDATA_TIMEOUT=8s
@@ -304,6 +308,8 @@ Chart eligibility, formula, stable tie-breaking and live-snapshot limits are doc
 Story DNA classification, confidence, spoilers, deterministic weighting and the future authorized-AI seam are documented in [`docs/STORY_DNA_POLICY.md`](docs/STORY_DNA_POLICY.md).
 
 Server-side review redaction, progress-aware episode visibility, protection modes and the conservative AI-detection boundary are documented in [`docs/SPOILER_FIREWALL.md`](docs/SPOILER_FIREWALL.md).
+
+Plotlyst Debate’s minimum sample, aggregation, evidence, spoiler policy, cache refresh and opt-in AI boundary are documented in [`docs/DEBATE_ANALYSIS_POLICY.md`](docs/DEBATE_ANALYSIS_POLICY.md).
 
 ## Build and validation
 
